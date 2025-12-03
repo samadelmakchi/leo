@@ -1,0 +1,11 @@
+- name: Run pre-deploy backup (async)
+  when:
+    - customer_state == "up"
+    - customer_backup_enabled | bool
+  ansible.builtin.command: bash {{ backup_path }}/{{ inventory_hostname }}/{{ item }}.sh
+  loop:
+    - backup_volumes
+    - backup_databases
+  async: 1800
+  poll: 15
+  ignore_errors: true

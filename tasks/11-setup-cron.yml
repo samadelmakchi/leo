@@ -1,0 +1,14 @@
+- name: Setup or remove backup cron jobs
+  when: customer_state == "up"
+  ansible.builtin.cron:
+    name: "{{ item.name }} ({{ inventory_hostname }})"
+    minute: "{{ item.cron.split(' ')[0] }}"
+    hour: "{{ item.cron.split(' ')[1] }}"
+    day: "{{ item.cron.split(' ')[2] | default('*') }}"
+    month: "{{ item.cron.split(' ')[3] | default('*') }}"
+    weekday: "{{ item.cron.split(' ')[4] | default('*') }}"
+    job: "/bin/bash {{ backup_path }}/{{ inventory_hostname }}/{{ item.script }}.sh >> {{ log_path }}/backup/cron.log 2>&1"
+    state: "{{ 'present' if customer_backup_enabled | bool else 'absent' }}"
+  loop:
+    - { name: "Backup Volumes", script: backup_volumes, cron: "{{ customer_backup_cron_volumes }}" }
+    - { name: "Backup Databases", script: backup_databases, cron: "{{ customer_backup_cron_databases }}" }

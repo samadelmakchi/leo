@@ -1,0 +1,24 @@
+- name: Define projects list
+  when: customer_state == "up"
+  set_fact:
+    projects:
+      - name: gateway
+        folder: gateway
+        repo: "git@github.com:nasserman/calibri.git"
+        branch_var: customer_gateway_git_branches
+        tag_var: customer_gateway_git_tags
+        update: "{{ customer_gateway_update }}"
+
+      - name: portal
+        folder: portal
+        repo: "git@github.com:nasserman/calibri-portal.git"
+        branch_var: customer_portal_git_branches
+        tag_var: customer_portal_git_tags
+        update: "{{ customer_portal_update }}"
+
+      - name: portal-frontend
+        folder: portal-frontend
+        repo: "git@github.com:nasserman/calibri-portal-frontend.git"
+        branch_var: customer_portal_frontend_git_branches
+        tag_var: customer_portal_frontend_git_tags
+        update: "{{ customer_portal_frontend_update }}"

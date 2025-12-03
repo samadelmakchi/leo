@@ -1,0 +1,16 @@
+- name: Stop and remove everything when state=down
+  when: customer_state == "down"
+  block:
+    - ansible.builtin.shell: |
+        docker ps -a --filter "name={{ customer_containers }}" -q | xargs -r docker stop
+        docker ps -a --filter "name={{ customer_containers }}" -q | xargs -r docker rm -f
+      ignore_errors: true
+
+    - ansible.builtin.cron:
+        name: "{{ item }} ({{ inventory_hostname }})"
+        state: absent
+      loop:
+        - "Backup Volumes"
+        - "Backup Databases"
+
+    - meta: end_host

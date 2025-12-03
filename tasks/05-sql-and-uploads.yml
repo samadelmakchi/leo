@@ -1,0 +1,41 @@
+- name: Deploy SQL file and uploads (gateway only)
+  when: customer_state == "up"
+  block:
+
+    - name: Check if customer-specific SQL exists on controller
+      local_action: stat path="sql/{{ inventory_hostname }}.sql"
+      become: false
+      register: customer_sql
+      run_once: true
+      ignore_errors: true
+
+    - name: Check if default.sql exists on controller
+      local_action: stat path="sql/default.sql"
+      become: false
+      register: default_sql
+      run_once: true
+
+    - name: Fail if neither customer SQL nor default.sql exists
+      fail:
+        msg: "Neither sql/{{ inventory_hostname }}.sql nor sql/default.sql found! Please create at least default.sql"
+      when: not customer_sql.stat.exists and not default_sql.stat.exists
+
+    - name: Copy customer-specific SQL or default
+      ansible.builtin.copy:
+        src: "{{ 'sql/' + inventory_hostname + '.sql' if customer_sql.stat.exists else 'sql/default.sql' }}"
+        dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/docker/init/install.sql"
+        mode: "0644"
+
+    - name: Check if customer uploads zip exists
+      local_action: stat path="sql/{{ inventory_hostname }}.zip"
+      become: false
+      register: zip_stat
+      run_once: true
+      ignore_errors: true
+
+    - name: Extract customer-specific uploads archive (only if exists)
+      ansible.builtin.unarchive:
+        src: "sql/{{ inventory_hostname }}.zip"
+        dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/uploads"
+        creates: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/uploads/index.html"
+      when: zip_stat.stat.exists | default(false)

@@ -1,0 +1,67 @@
+---
+- name: Check if repo directory has valid .git
+  ansible.builtin.stat:
+    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/.git"
+  register: git_dir
+  changed_when: false
+
+- name: Remove broken/incomplete repo if .git is missing or corrupted
+  ansible.builtin.file:
+    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}"
+    state: absent
+  when: git_dir.stat.exists == false
+
+- name: Ensure parent directory exists before clone
+  ansible.builtin.file:
+    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}"
+    state: directory
+    mode: "0755"
+  when: git_dir.stat.exists == false
+
+- name: Clone or force-update repo to exact desired commit/tag/branch (full history)
+  ansible.builtin.git:
+    repo: "{{ project.repo }}"
+    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}"
+    version: >-
+      {% if hostvars[inventory_hostname][project.tag_var] is defined and hostvars[inventory_hostname][project.tag_var] | trim | length > 0 %}
+        {{ hostvars[inventory_hostname][project.tag_var] | trim }}
+      {% elif hostvars[inventory_hostname][project.branch_var] is defined and hostvars[inventory_hostname][project.branch_var] | trim | length > 0 %}
+        {{ hostvars[inventory_hostname][project.branch_var] | trim }}
+      {% else %}
+        main
+      {% endif %}
+    key_file: "{{ playbook_dir }}/id_rsa"
+    accept_hostkey: yes
+    update: yes
+    force: yes
+  register: git_result
+  changed_when: git_result.after is defined and git_result.before is defined and git_result.after != git_result.before
+
+- name: Show git update summary
+  ansible.builtin.debug:
+    msg: >-
+      پروژه {{ project.name }}:
+      از {{ (git_result.before | default('none') | string)[:7] }}
+      → {{ (git_result.after | default('cloned') | string)[:7] }}
+      {% if git_result.after is not defined %} (کلون جدید){% endif %}
+  when: git_result is defined
+
+- name: Ensure docker subdirectory exists
+  ansible.builtin.file:
+    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker"
+    state: directory
+    mode: "0755"
+
+- name: Ensure gateway docker/init directory exists (for SQL init files)
+  ansible.builtin.file:
+    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/init"
+    state: directory
+    mode: "0755"
+  when: project.name == "gateway"
+
+- name: Deploy docker-compose.yml from template
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/template/docker-compose-{{ project.name }}.yml.j2"
+    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-compose.yml"
+    mode: "0644"
+    backup: yes

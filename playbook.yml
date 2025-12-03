@@ -1,245 +1,28 @@
 ---
-- name: Deploy & Test Customer Project — Final Fixed Version
+- name: Deploy & Test Customer Project — Modular Version
   hosts: all
   become: true
 
   vars:
-    project_path: /opt/calibri-projects
     backup_path: "{{ project_path }}/backup"
     info_path: "{{ project_path }}/info"
     log_path: "{{ project_path }}/log"
     tests_path: "{{ playbook_dir }}/tests"
 
-    # کنترل‌ها
-    customer_state: "{{ customer_state | default('up') }}"
-    customer_backup_enabled: "{{ customer_backup_enabled | default(true) | bool }}"
-    customer_test_enabled: "{{ customer_test_enabled | default(false) | bool }}"
-    customer_test_fail_fast: "{{ customer_test_fail_fast | default(true) | bool }}"
-
-    customer_gateway_update: "{{ customer_gateway_update | default(true) | bool }}"
-    customer_portal_update: "{{ customer_portal_update | default(true) | bool }}"
-    customer_portal_frontend_update: "{{ customer_portal_frontend_update | default(true) | bool }}"
-
-    customer_backup_keep: "{{ customer_backup_keep | default(7) | int }}"
-    customer_backup_cron_volumes: "{{ customer_backup_cron_volumes | default('0 3 * * 0') }}"
-    customer_backup_cron_databases: "{{ customer_backup_cron_databases | default('30 1,9,17 * * *') }}"
-
   tasks:
-
-    # ===================================================================
-    # 1. حالت down → حذف کامل
-    # ===================================================================
-    - name: Stop and remove containers + cron jobs on down state
-      when: customer_state == "down"
-      block:
-        - ansible.builtin.shell: |
-            docker ps -a --filter "name={{ customer_containers }}" -q | xargs -r docker stop
-            docker ps -a --filter "name={{ customer_containers }}" -q | xargs -r docker rm -f
-          ignore_errors: true
-
-        - ansible.builtin.cron:
-            name: "{{ item }} ({{ inventory_hostname }})"
-            state: absent
-          loop:
-            - "Backup Volumes"
-            - "Backup Databases"
-
-        - ansible.builtin.meta: end_host
-
-    # ===================================================================
-    # 2. فقط در حالت up ادامه بده
-    # ===================================================================
-    - name: Deploy only in up state
-      when: customer_state == "up"
-      block:
-
-        # دایرکتوری‌ها
-        - name: Create required directories
-          ansible.builtin.file:
-            path: "{{ item }}"
-            state: directory
-            mode: "0777"
-          loop:
-            - "{{ project_path }}/{{ inventory_hostname }}"
-            - "{{ backup_path }}/{{ inventory_hostname }}"
-            - "{{ log_path }}/backup"
-            - "{{ log_path }}/test-reports/{{ inventory_hostname }}"
-            - "{{ info_path }}/volumes"
-            - "{{ info_path }}/databases"
-
-        # پروژه‌ها
-        - name: Define projects
-          ansible.builtin.set_fact:
-            projects:
-              - { name: gateway,         folder: gateway,         repo: "git@github.com:nasserman/calibri.git",                branch_var: customer_gateway_git_branches,         tag_var: customer_gateway_git_tags,         update: "{{ customer_gateway_update }}" }
-              - { name: portal,          folder: portal,          repo: "git@github.com:nasserman/calibri-portal.git",         branch_var: customer_portal_git_branches,          tag_var: customer_portal_git_tags,          update: "{{ customer_portal_update }}" }
-              - { name: portal-frontend, folder: portal-frontend, repo: "git@github.com:nasserman/calibri-portal-frontend.git",branch_var: customer_portal_frontend_git_branches,tag_var: customer_portal_frontend_git_tags, update: "{{ customer_portal_frontend_update }}" }
-
-        # به‌روزرسانی انتخابی سرویس‌ها
-        - name: Update selected services (git + compose)
-          when: item.update | bool
-          loop: "{{ projects }}"
-          block:
-            - ansible.builtin.file:
-                path: "{{ project_path }}/{{ inventory_hostname }}/{{ item.folder }}"
-                state: directory
-                mode: "0777"
-
-            - ansible.builtin.stat:
-                path: "{{ project_path }}/{{ inventory_hostname }}/{{ item.folder }}/.git"
-                register: repo_stat
-
-            - ansible.builtin.git:
-                repo: "{{ item.repo }}"
-                dest: "{{ project_path }}/{{ inventory_hostname }}/{{ item.folder }}"
-                version: "{{ hostvars[inventory_hostname][item.tag_var] | default(hostvars[inventory_hostname][item.branch_var] | default('main')) }}"
-                key_file: "{{ playbook_dir }}/id_rsa"
-                accept_hostkey: true
-                force: true
-              when: not repo_stat.stat.exists
-
-            - ansible.builtin.command: git pull --no-rebase
-              args:
-                chdir: "{{ project_path }}/{{ inventory_hostname }}/{{ item.folder }}"
-              when: repo_stat.stat.exists
-
-            - ansible.builtin.file:
-                path: "{{ project_path }}/{{ inventory_hostname }}/{{ item.folder }}/docker"
-                state: directory
-                mode: "0777"
-
-            - ansible.builtin.template:
-                src: "template/{{ item.folder == 'portal-frontend' | ternary('docker-compose-portal-frontend.yml.j2', item.folder + '/docker-compose.yml.j2') }}"
-                dest: "{{ project_path }}/{{ inventory_hostname }}/{{ item.folder }}/docker/docker-compose.yml"
-                mode: "0777"
-                force: true
-
-        # کانفیگ‌های اختصاصی
-        - name: Deploy customer config files
-          ansible.builtin.copy:
-            dest: "{{ item.dest }}"
-            content: "{{ item.content }}"
-            mode: "0777"
-            force: true
-          loop:
-            - { dest: "{{ project_path }}/{{ inventory_hostname }}/portal-frontend/baseUrl.js", content: "const baseUrl = 'https://{{ customer_subdomain_backendportal }}.{{ customer_domain }}'; export default baseUrl;", condition: "{{ customer_portal_frontend_update }}" }
-            - { dest: "{{ project_path }}/{{ inventory_hostname }}/portal/.env.local", content: "DATABASE_URL=\"mysql://{{ portal_mysql_user }}:{{ portal_mysql_password }}@{{ customer_containers }}-portal-db:3306/{{ portal_mysql_db_name }}?serverVersion=10.11.2-MariaDB&charset=utf8mb4\"\nBASE_URL=\"https://{{ customer_subdomain_gateway }}.{{ customer_domain }}\"", condition: "{{ customer_portal_update }}" }
-            - { dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/application/config/my_database.php", content: "<?php defined('BASEPATH') OR exit('No direct script access allowed');\n$active_group = 'default'; $query_builder = TRUE;\n$db['default'] = array('hostname' => '{{ customer_containers }}-gateway-db', 'username' => '{{ gateway_mysql_user }}', 'password' => '{{ gateway_mysql_password }}', 'database' => '{{ gateway_mysql_db_name }}', 'dbdriver' => 'mysqli', 'char_set' => 'utf8', 'dbcollat' => 'utf8_general_ci');", condition: "{{ customer_gateway_update }}" }
-            - { dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/application/config/my_config.php", content: "<?php defined('BASEPATH') OR exit('No direct script access allowed');\n$config['base_url'] = \"https://{{ customer_subdomain_gateway }}.{{ customer_domain }}\";", condition: "{{ customer_gateway_update }}" }
-          when: item.condition | bool
-
-        # SQL + آپلودها
-        - name: Deploy SQL and uploads
-          when: customer_gateway_update
-          block:
-            - ansible.builtin.copy:
-                src: "{{ 'sql/' + inventory_hostname + '.sql' if (lookup('fileglob', 'sql/' + inventory_hostname + '.sql')) else 'sql/default.sql' }}"
-                dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/docker/init/install.sql"
-                mode: "0644"
-
-            - ansible.builtin.unarchive:
-                src: "sql/{{ inventory_hostname }}.zip"
-                dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/uploads"
-                creates: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/uploads"
-              ignore_errors: true
-
-        # بکاپ قبل از دپلوی
-        - name: Run pre-deploy backup
-          ansible.builtin.command: bash {{ backup_path }}/{{ inventory_hostname }}/{{ item }}.sh
-          loop: [backup_volumes, backup_databases]
-          when: customer_backup_enabled
-          async: 1800
-          poll: 15
-          ignore_errors: true
-
-        # دپلوی سرویس‌ها
-        - name: Deploy services
-          ansible.builtin.command: >
-            docker compose -p {{ customer_containers }}-{{ item.name }}
-            -f {{ project_path }}/{{ inventory_hostname }}/{{ item.folder }}/docker/docker-compose.yml
-            up -d --remove-orphans --force-recreate
-          loop: "{{ projects }}"
-          when: item.update | bool
-
-        # میگریشن‌ها
-        - name: Run migrations
-          community.docker.docker_container_exec:
-            container: "{{ customer_containers }}-{{ item.name }}"
-            command: "{{ item.cmd }}"
-          loop:
-            - { name: portal, cmd: "composer install --no-dev --optimize-autoloader" }
-            - { name: portal, cmd: "php bin/console doctrine:migrations:migrate --no-interaction --env=prod" }
-            - { name: gateway, cmd: "php index.php migrate index false" }
-          when: (item.name == 'portal' and customer_portal_update) or (item.name == 'gateway' and customer_gateway_update)
-          ignore_errors: true
-
-        # اطلاعات ولوم و دیتابیس
-        - name: Write info files
-          ansible.builtin.copy:
-            dest: "{{ item.0 }}"
-            content: "{{ item.1 }}"
-            mode: "0644"
-          loop:
-            - [ "{{ info_path }}/volumes/{{ inventory_hostname }}.txt", "gateway/admin/uploads\ngateway/admin/captcha_images\ngateway/admin\nportal\nportal-frontend" ]
-            - [ "{{ info_path }}/databases/{{ inventory_hostname }}.txt", "mysql,{{ portal_mysql_db_name }},{{ portal_mysql_user }},{{ portal_mysql_password }},{{ customer_containers }}-portal-db\nmysql,{{ gateway_mysql_db_name }},{{ gateway_mysql_user }},{{ gateway_mysql_password }},{{ customer_containers }}-gateway-db" ]
-
-        # کپی اسکریپت‌های بکاپ
-        - name: Copy backup scripts
-          ansible.builtin.copy:
-            src: "backup_scripts/{{ item }}.sh"
-            dest: "{{ backup_path }}/{{ inventory_hostname }}/{{ item }}.sh"
-            mode: "0755"
-          loop: [backup_volumes, backup_databases]
-          when: customer_backup_enabled
-
-        # کرون جاب‌ها
-        - name: Setup backup cron jobs
-          ansible.builtin.cron:
-            name: "{{ item.name }} ({{ inventory_hostname }})"
-            minute: "{{ item.cron.split(' ')[0] }}"
-            hour: "{{ item.cron.split(' ')[1] }}"
-            day: "{{ item.cron.split(' ')[2] | default('*') }}"
-            month: "{{ item.cron.split(' ')[3] | default('*') }}"
-            weekday: "{{ item.cron.split(' ')[4] | default('*') }}"
-            job: "/bin/bash {{ backup_path }}/{{ inventory_hostname }}/{{ item.script }}.sh >> {{ log_path }}/backup/cron.log 2>&1"
-            state: "{{ 'present' if customer_backup_enabled else 'absent' }}"
-          loop:
-            - { name: "Backup Volumes", script: backup_volumes, cron: "{{ customer_backup_cron_volumes }}" }
-            - { name: "Backup Databases", script: backup_databases, cron: "{{ customer_backup_cron_databases }}" }
-
-        # تست کامل
-        - name: Run full test suite
-          when: customer_test_enabled
-          tags: test
-          block:
-            - ansible.builtin.pip:
-                requirements: "{{ tests_path }}/requirements.txt"
-                executable: pip3
-              become: true
-
-            - ansible.builtin.pip:
-                name: [pytest, pytest-html, pytest-xdist, requests, selenium, playwright, locust]
-                executable: pip3
-              become: true
-
-            - ansible.builtin.command: python -m playwright install chromium --with-deps
-              ignore_errors: true
-
-            - ansible.builtin.command: >
-                pytest
-                --junitxml={{ log_path }}/test-reports/{{ inventory_hostname }}/junit.xml
-                --html={{ log_path }}/test-reports/{{ inventory_hostname }}/report.html --self-contained-html
-                -n auto
-                {% if customer_test_fail_fast %}--maxfail=1{% endif %}
-                "{{ tests_path }}"
-              register: test_result
-              failed_when: test_result.rc not in [0, 5]
-              changed_when: false
-
-            - ansible.builtin.debug:
-                msg: "ALL TESTS PASSED → Report: {{ log_path }}/test-reports/{{ inventory_hostname }}/report.html"
-              when: test_result.rc == 0
-
-            - ansible.builtin.fail:
-                msg: "TESTS FAILED → See HTML report"
-              when: test_result.rc != 0 and test_result.rc != 5
+    - include_tasks: tasks/00-down-state.yml
+    - include_tasks: tasks/01-create-dirs.yml
+    - include_tasks: tasks/02-define-projects.yml
+    - include_tasks: tasks/02-ensure-project-dirs.yml
+    - include_tasks: tasks/02.5-ensure-gateway-docker-init.yml
+    - include_tasks: tasks/03-update-services.yml
+    - include_tasks: tasks/04-config-files.yml
+    - include_tasks: tasks/05-sql-and-uploads.yml
+    - include_tasks: tasks/06-pre-deploy-backup.yml
+    - include_tasks: tasks/07-deploy-containers.yml
+    - include_tasks: tasks/08-run-migrations.yml
+    - include_tasks: tasks/09-write-info-files.yml
+    - include_tasks: tasks/10-copy-backup-scripts.yml
+    - include_tasks: tasks/11-setup-cron.yml
+    - include_tasks: tasks/99-run-tests.yml
+      tags: test

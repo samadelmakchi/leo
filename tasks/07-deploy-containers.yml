@@ -1,0 +1,13 @@
+- name: Run migrations and composer install
+  when: customer_state == "up"
+  community.docker.docker_container_exec:
+    container: "{{ customer_containers }}-{{ item.name }}"
+    command: "{{ item.cmd }}"
+  loop:
+    - { name: portal, cmd: "composer install --no-dev --optimize-autoloader" }
+    - { name: portal, cmd: "php bin/console doctrine:migrations:migrate --no-interaction --env=prod" }
+    - { name: gateway, cmd: "php index.php migrate index false" }
+  when:
+    - (item.name == 'portal' and customer_portal_update | bool) or
+      (item.name == 'gateway' and customer_gateway_update | bool)
+  ignore_errors: true

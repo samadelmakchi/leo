@@ -1,0 +1,25 @@
+- name: Run migrations and composer install (only if code was updated)
+  when:
+    - customer_state == "up"
+    - any_service_updated | default(false) | bool
+  block:
+    - name: Composer install (portal)
+      community.docker.docker_container_exec:
+        container: "{{ customer_containers }}-portal"
+        command: composer install --no-dev --optimize-autoloader
+      ignore_errors: true
+      when: customer_portal_update | bool
+
+    - name: Doctrine migrations (portal)
+      community.docker.docker_container_exec:
+        container: "{{ customer_containers }}-portal"
+        command: php bin/console doctrine:migrations:migrate --no-interaction --env=prod
+      ignore_errors: true
+      when: customer_portal_update | bool
+
+    - name: Gateway migration
+      community.docker.docker_container_exec:
+        container: "{{ customer_containers }}-gateway"
+        command: php index.php migrate index false
+      ignore_errors: true
+      when: customer_gateway_update | bool

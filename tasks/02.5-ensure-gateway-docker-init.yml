@@ -1,0 +1,8 @@
+- name: Always ensure gateway/docker/init exists (regardless of update flag)
+  ansible.builtin.file:
+    path: "{{ project_path }}/{{ inventory_hostname }}/gateway/docker/init"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: customer_state == "up"

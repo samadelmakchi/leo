@@ -141,7 +141,7 @@ ansible-playbook -i inventory.yml playbook.yml \
 ### مسیر ذخیره بکاپ‌ها
 
 ```
-/opt/calibri-projects/backup/نام_مشتری/2025-12-02-10-30-00/
+/home/calibri/backup/[customer_name]/2025-12-02-10-30-00/
 ```
 
 ---
@@ -149,9 +149,14 @@ ansible-playbook -i inventory.yml playbook.yml \
 ### گزارش تست‌ها
 
 ```
-/opt/calibri-projects/log/test-reports/نام_مشتری/report.html
+/home/calibri/log/test-reports/[customer_name]/report.html
 ```
 
 ---
 
 **ساخته شده با عشق توسط صمد المکچی**  
+
+
+sudo rm -rf /home/calibri/ 
+clear 
+ansible-playbook -i inventory.yml playbook.yml --limit simnad

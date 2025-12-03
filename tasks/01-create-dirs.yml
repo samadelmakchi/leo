@@ -1,0 +1,19 @@
+- name: Ensure base project directory exists (همیشه اول)
+  ansible.builtin.file:
+    path: "{{ project_path }}/{{ inventory_hostname }}"
+    state: directory
+    mode: "0755"
+  when: customer_state == "up"
+
+- name: Ensure other global directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ backup_path }}/{{ inventory_hostname }}"
+    - "{{ log_path }}/backup"
+    - "{{ log_path }}/test-reports/{{ inventory_hostname }}"
+    - "{{ info_path }}/volumes"
+    - "{{ info_path }}/databases"
+  when: customer_state == "up"

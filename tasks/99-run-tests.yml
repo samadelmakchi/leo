@@ -1,0 +1,81 @@
+- name: Run full test suite (only if test enabled + pip3 available)
+  when:
+    - customer_state == "up"
+    - customer_test_enabled | bool
+    - any_service_updated | default(false) | bool
+  block:
+
+    - name: Check if pip3 is installed
+      command: which pip3
+      register: pip_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Fix apt cache and update (حل کامل Hash Sum mismatch)
+      become: true
+      command: "{{ item }}"
+      loop:
+        - apt-get clean
+        - rm -rf /var/lib/apt/lists/*
+        - apt-get update --fix-missing
+      when: pip_check.rc != 0 and ansible_os_family == "Debian"
+      ignore_errors: true
+
+    - name: Install python3-pip (با تلاش مجدد در صورت خطای شبکه یا hash mismatch)
+      become: true
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+      register: pip_install
+      until: pip_install is succeeded
+      retries: 3
+      delay: 10
+      when: pip_check.rc != 0 and ansible_os_family == "Debian"
+
+    - name: Install testing dependencies
+      become: true
+      pip:
+        name:
+          - pytest
+          - pytest-html
+          - pytest-xdist
+          - requests
+          - selenium
+          - playwright
+          - locust
+        executable: pip3
+
+    - name: Install Playwright browsers
+      become: true
+      command: python3 -m playwright install chromium --with-deps
+      ignore_errors: true
+
+    - name: Create test report directory
+      file:
+        path: "{{ log_path }}/test-reports/{{ inventory_hostname }}"
+        state: directory
+        mode: "0755"
+
+    - name: Run pytest
+      command: >
+        pytest "{{ tests_path }}"
+        --junitxml={{ log_path }}/test-reports/{{ inventory_hostname }}/junit.xml
+        --html={{ log_path }}/test-reports/{{ inventory_hostname }}/report.html --self-contained-html
+        -n auto
+        {% if customer_test_fail_fast %}--maxfail=1{% endif %}
+      register: test_result
+      changed_when: false
+      failed_when: test_result.rc not in [0, 5]
+
+    - name: All tests passed
+      debug:
+        msg: "همه تست‌ها با موفقیت پاس شدن → گزارش: {{ log_path }}/test-reports/{{ inventory_hostname }}/report.html"
+      when: test_result.rc == 0
+
+    - name: Some tests failed (but playbook continues)
+      debug:
+        msg: "بعضی تست‌ها fail شدن → گزارش: {{ log_path }}/test-reports/{{ inventory_hostname }}/report.html"
+      when: test_result.rc != 0 and test_result.rc != 5
+
+  tags: test

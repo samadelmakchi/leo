@@ -1,44 +1,104 @@
+---
 all:
   children:
     customers:
-      hosts:
-        simnad: { customer_name: "سیمناد",     customer_state: "up" }
-        nikan:  { customer_name: "نیکان",      customer_state: "up" }
-        test:   { customer_name: "تست",        customer_state: "up" }
-        smd:    { customer_name: "صمد",        customer_state: "down" }
+      children:
 
+        # ====================== هر مشتری یک گروه جداگانه است ======================
+        simnad:
+          hosts:
+            simnad:       # اسم host و گروه یکیه ولی مشکلی نداره چون درست ساختار دادیم
+          vars:
+            customer_name: "سیمناد"
+            customer_state: "up"
+            customer_containers: "simnad_container"
+            customer_subdomain_gateway: "calibri"
+            customer_subdomain_portal: "portal"
+            customer_subdomain_backendportal: "backendportal"
+            customer_domain: "pardazeshafza.com"
+            customer_gateway_ports: 8061
+            customer_portal_ports: 7061
+            customer_portal_frontend_ports: 6061
+
+        nikan:
+          hosts:
+            nikan:
+          vars:
+            customer_name: "نیکان"
+            customer_state: "up"
+            customer_containers: "nikan_container"
+            customer_subdomain_gateway: "calibri"
+            customer_subdomain_portal: "portal"
+            customer_subdomain_backendportal: "backendportal"
+            customer_domain: "nikan.ir"
+            customer_gateway_ports: 8062
+            customer_portal_ports: 7062
+            customer_portal_frontend_ports: 6062
+
+        test:
+          hosts:
+            test:
+          vars:
+            customer_name: "تست"
+            customer_state: "up"
+            customer_containers: "test_container"
+            customer_subdomain_gateway: "testcalibri"
+            customer_subdomain_portal: "testportal"
+            customer_subdomain_backendportal: "testbackendportal"
+            customer_domain: "test.local"
+            customer_gateway_ports: 8063
+            customer_portal_ports: 7063
+            customer_portal_frontend_ports: 6063
+            customer_backup_enabled: false
+            customer_test_enabled: true
+
+        smd:
+          hosts:
+            smd:
+          vars:
+            customer_name: "صمد"
+            customer_state: "down"
+            customer_containers: "smd_container"
+            customer_subdomain_gateway: "smdcalibri"
+            customer_subdomain_portal: "smdportal"
+            customer_subdomain_backendportal: "smdbackendportal"
+            customer_domain: "elmakchi.ir"
+            customer_gateway_ports: 8064
+            customer_portal_ports: 7064
+            customer_portal_frontend_ports: 6064
+
+      # ====================== متغیرهای مشترک همه مشتری‌ها ======================
       vars:
         ansible_connection: local
         ansible_user: root
         project_path: /home/calibri
 
-        # Git Settings
-        customer_gateway_git_branches: "dev"
-        customer_portal_git_branches: "dev"
+        # Git branch/tag پیش‌فرض
+        customer_gateway_git_branches: "master"
+        customer_portal_git_branches: "master"
         customer_portal_frontend_git_branches: "dev"
         customer_gateway_git_tags: ""
         customer_portal_git_tags: ""
         customer_portal_frontend_git_tags: ""
 
-        # Update Control
+        # کنترل آپدیت
         customer_gateway_update: true
         customer_portal_update: true
         customer_portal_frontend_update: true
 
-        # Backup Settings
+        # بکاپ و تست
         customer_backup_enabled: true
         customer_backup_keep: 7
         customer_backup_cron_volumes: "0 3 * * 0"
         customer_backup_cron_databases: "30 1,9,17 * * *"
-
-        # Test Settings
         customer_test_enabled: true
+        customer_test_fail_fast: true
 
-        # Domain & IP
+        # دامین و IP پیش‌فرض
         customer_domain: "pardazeshafza.com"
         customer_url: "185.255.89.160"
 
-        # Database Credentials
+        # دیتابیس‌ها (در محیط تست همه پسورد 1234 هست)
         portal_mysql_root_password: "1234"
         portal_mysql_user: "calibri_user"
         portal_mysql_password: "1234"
@@ -48,45 +108,3 @@ all:
         gateway_mysql_user: "calibri_gateway"
         gateway_mysql_password: "1234"
         gateway_mysql_db_name: "calibri_gateway"
-
-    # Customer-specific overrides
-    simnad:
-      customer_containers: "simnad_container"
-      customer_subdomain_gateway: "calibri"
-      customer_subdomain_portal: "portal"
-      customer_subdomain_backendportal: "backendportal"
-      customer_gateway_ports: 8061
-      customer_portal_ports: 7061
-      customer_portal_frontend_ports: 6061
-
-    nikan:
-      customer_containers: "nikan_container"
-      customer_subdomain_gateway: "calibri"
-      customer_subdomain_portal: "portal"
-      customer_subdomain_backendportal: "backendportal"
-      customer_domain: "nikan.ir"
-      customer_gateway_ports: 8062
-      customer_portal_ports: 7062
-      customer_portal_frontend_ports: 6062
-
-    test:
-      customer_containers: "test_container"
-      customer_subdomain_gateway: "testcalibri"
-      customer_subdomain_portal: "testportal"
-      customer_subdomain_backendportal: "testbackendportal"
-      customer_domain: "test.local"
-      customer_gateway_ports: 8063
-      customer_portal_ports: 7063
-      customer_portal_frontend_ports: 6063
-      customer_backup_enabled: false
-      customer_test_enabled: true
-
-    smd:
-      customer_containers: "smd_container"
-      customer_subdomain_gateway: "smdcalibri"
-      customer_subdomain_portal: "smdportal"
-      customer_subdomain_backendportal: "smdbackendportal"
-      customer_domain: "elmakchi.ir"
-      customer_gateway_ports: 8064
-      customer_portal_ports: 7064
-      customer_portal_frontend_ports: 6064

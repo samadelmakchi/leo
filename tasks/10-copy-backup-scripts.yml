@@ -1,0 +1,11 @@
+- name: Deploy backup scripts as templates (so Jinja variables render)
+  ansible.builtin.template:
+    src: "backup_scripts/{{ item }}.sh.j2"
+    dest: "{{ backup_path }}/{{ inventory_hostname }}/{{ item }}.sh"
+    mode: "0755"
+  loop:
+    - backup_volumes
+    - backup_databases
+  when:
+    - customer_state == "up"
+    - customer_backup_enabled | bool

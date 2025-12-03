@@ -1,0 +1,22 @@
+- name: Reset flag before checking updates
+  set_fact:
+    any_service_updated: false
+  run_once: true
+
+- name: Update selected services (git + compose)
+  when: customer_state == "up"
+  include_tasks: update_service.yml
+  loop: "{{ projects }}"
+  loop_control:
+    loop_var: project
+    label: "{{ project.name }}"
+  when: project.update | default(false)
+
+- name: Mark that at least one service was updated
+  set_fact:
+    any_service_updated: true
+  run_once: true
+  when: >-
+    (customer_portal_update | default(false)) or
+    (customer_gateway_update | default(false)) or
+    (customer_portal_frontend_update | default(false))

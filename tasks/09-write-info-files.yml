@@ -1,0 +1,18 @@
+- name: Write volumes and databases info files
+  when: customer_state == "up"
+  ansible.builtin.copy:
+    dest: "{{ item.0 }}"
+    content: "{{ item.1 }}"
+    mode: "0644"
+  loop:
+    - - "{{ info_path }}/volumes/{{ inventory_hostname }}.txt"
+      - |
+        gateway/admin/uploads
+        gateway/admin/captcha_images
+        gateway/admin
+        portal
+        portal-frontend
+    - - "{{ info_path }}/databases/{{ inventory_hostname }}.txt"
+      - |
+        mysql,{{ portal_mysql_db_name }},{{ portal_mysql_user }},{{ portal_mysql_password }},{{ customer_containers }}-portal-db
+        mysql,{{ gateway_mysql_db_name }},{{ gateway_mysql_user }},{{ gateway_mysql_password }},{{ customer_containers }}-gateway-db
