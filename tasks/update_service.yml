@@ -59,9 +59,14 @@
     mode: "0755"
   when: project.name == "gateway"
 
-- name: Deploy docker-compose.yml from template
+- name: Deploy compose.override.yml from template
   ansible.builtin.template:
     src: "{{ playbook_dir }}/template/docker-compose-{{ project.name }}.yml.j2"
-    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-compose.yml"
+    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/compose.override.yml"
     mode: "0644"
     backup: yes
+  loop: "{{ projects }}"
+  loop_control:
+    loop_var: project
+  when: customer_state == "up"
+  become: true

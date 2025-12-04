@@ -13,16 +13,16 @@
     - include_tasks: tasks/00-down-state.yml
     - include_tasks: tasks/01-create-dirs.yml
     - include_tasks: tasks/02-define-projects.yml
-    - include_tasks: tasks/02-ensure-project-dirs.yml
-    - include_tasks: tasks/02.5-ensure-gateway-docker-init.yml
-    - include_tasks: tasks/03-update-services.yml
-    - include_tasks: tasks/04-config-files.yml
-    - include_tasks: tasks/05-sql-and-uploads.yml
-    - include_tasks: tasks/06-pre-deploy-backup.yml
-    - include_tasks: tasks/07-deploy-containers.yml
-    - include_tasks: tasks/08-run-migrations.yml
-    - include_tasks: tasks/09-write-info-files.yml
-    - include_tasks: tasks/10-copy-backup-scripts.yml
-    - include_tasks: tasks/11-setup-cron.yml
+    - include_tasks: tasks/03-ensure-project-dirs.yml
+    - include_tasks: tasks/04-ensure-gateway-docker-init.yml
+    - include_tasks: tasks/05-update-services.yml
+    - include_tasks: tasks/06-config-files.yml
+    - include_tasks: tasks/07-sql-and-uploads.yml
+    - include_tasks: tasks/08-pre-deploy-backup.yml
+    - include_tasks: tasks/09-deploy-containers.yml
+    - include_tasks: tasks/10-run-migrations.yml
+    - include_tasks: tasks/11-write-info-files.yml
+    - include_tasks: tasks/12-copy-backup-scripts.yml
+    - include_tasks: tasks/13-setup-cron.yml
     - include_tasks: tasks/99-run-tests.yml
       tags: test

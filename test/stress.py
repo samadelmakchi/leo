@@ -1,4 +1,3 @@
-# tests/stress.py
 import pytest
 import requests
 import threading

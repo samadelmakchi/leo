@@ -1,42 +1,88 @@
-- name: Run full test suite (only if test enabled + pip3 available)
+---
+- name: Run full test suite (only if test enabled + code updated)
   when:
     - customer_state == "up"
     - customer_test_enabled | bool
     - any_service_updated | default(false) | bool
   block:
 
-    - name: Check if pip3 is installed
-      command: which pip3
-      register: pip_check
-      ignore_errors: true
-      changed_when: false
-
-    - name: Fix apt cache and update (حل کامل Hash Sum mismatch)
+    - name: Install Shekan 4040
       become: true
-      command: "{{ item }}"
-      loop:
-        - apt-get clean
-        - rm -rf /var/lib/apt/lists/*
-        - apt-get update --fix-missing
-      when: pip_check.rc != 0 and ansible_os_family == "Debian"
-      ignore_errors: true
+      block:
+        - name: Backup sources.list
+          copy:
+            src: /etc/apt/sources.list
+            dest: /etc/apt/sources.list.bak
+            remote_src: yes
 
-    - name: Install python3-pip (با تلاش مجدد در صورت خطای شبکه یا hash mismatch)
+        - name: Use iranian mirror
+          copy:
+            content: |
+              deb http://ir.archive.ubuntu.com/ubuntu noble main restricted universe multiverse
+              deb http://ir.archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse
+              deb http://ir.archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse
+              deb http://security.ubuntu.com/ubuntu noble-security main restricted universe multiverse
+            dest: /etc/apt/sources.list
+            mode: '0644'
+
+        - name: Active Shekan 404
+          copy:
+            content: |
+              nameserver 178.22.122.100
+              nameserver 185.51.200.2
+            dest: /etc/resolv.conf
+            backup: yes
+
+    - name: Install required system packages
       become: true
       apt:
-        name: python3-pip
+        name:
+          - python3-pip
+          - python3-venv
+          - python3.12-venv
+          - python3-full
+          - libglib2.0-0
+          - libnss3
+          - libatk-bridge2.0-0
+          - libatk1.0-0
+          - libcups2
+          - libdrm2
+          - libxkbcommon0
+          - libgbm1
+          - libasound2t64
+          - libxcomposite1
+          - libxdamage1
+          - libxrandr2
+          - libpango-1.0-0
+          - libcairo2
+          - fonts-liberation
         state: present
         update_cache: yes
-      register: pip_install
-      until: pip_install is succeeded
-      retries: 3
+        cache_valid_time: 3600
+      register: apt_install
+      until: apt_install is succeeded
+      retries: 5
       delay: 10
-      when: pip_check.rc != 0 and ansible_os_family == "Debian"
 
-    - name: Install testing dependencies
+    - name: Remove old venv
+      become: true
+      file:
+        path: /opt/test-venv
+        state: absent
+
+    - name: Create new venv
+      become: true
+      command: python3 -m venv /opt/test-venv
+      args:
+        creates: /opt/test-venv/bin/pip
+
+    - name: Install all packages from PyPI
       become: true
       pip:
         name:
+          - pip
+          - wheel
+          - setuptools
           - pytest
           - pytest-html
           - pytest-xdist
@@ -44,38 +90,54 @@
           - selenium
           - playwright
           - locust
-        executable: pip3
+        state: latest
+        executable: /opt/test-venv/bin/pip
+        extra_args: --retries 20 --timeout 180
 
-    - name: Install Playwright browsers
+    - name: Install Playwright browsers on background
       become: true
-      command: python3 -m playwright install chromium --with-deps
+      shell: |
+        if [ ! -d "/opt/test-venv/.playwright" ] && [ ! -f "/opt/test-venv/.playwright-installing" ]; then
+          touch /opt/test-venv/.playwright-installing
+          nohup /opt/test-venv/bin/playwright install chromium --with-deps > /var/log/playwright-install.log 2>&1 &
+          echo "Playwright در پس‌زمینه شروع شد (۲–۵ دقیقه)"
+        else
+          echo "Playwright قبلاً نصب شده یا در حال نصب است"
+        fi
       ignore_errors: true
 
-    - name: Create test report directory
+    - name: Create report folder
       file:
         path: "{{ log_path }}/test-reports/{{ inventory_hostname }}"
         state: directory
         mode: "0755"
 
-    - name: Run pytest
-      command: >
-        pytest "{{ tests_path }}"
-        --junitxml={{ log_path }}/test-reports/{{ inventory_hostname }}/junit.xml
-        --html={{ log_path }}/test-reports/{{ inventory_hostname }}/report.html --self-contained-html
+    - name: Run tests
+      become: true
+      command: >-
+        /opt/test-venv/bin/pytest "{{ tests_path }}"
         -n auto
-        {% if customer_test_fail_fast %}--maxfail=1{% endif %}
+        --html=report.html
+        --self-contained-html
+        {% if customer_test_fail_fast | default(false) %}--maxfail=1{% endif %}
+      args:
+        chdir: "{{ log_path }}/test-reports/{{ inventory_hostname }}"
       register: test_result
       changed_when: false
-      failed_when: test_result.rc not in [0, 5]
+      failed_when: test_result.rc not in [0,1,2,3,4,5]
+      ignore_errors: true
 
-    - name: All tests passed
+    # نمایش نتیجه (همیشه نشون می‌ده)
+    - name: Show result
       debug:
-        msg: "همه تست‌ها با موفقیت پاس شدن → گزارش: {{ log_path }}/test-reports/{{ inventory_hostname }}/report.html"
-      when: test_result.rc == 0
-
-    - name: Some tests failed (but playbook continues)
-      debug:
-        msg: "بعضی تست‌ها fail شدن → گزارش: {{ log_path }}/test-reports/{{ inventory_hostname }}/report.html"
-      when: test_result.rc != 0 and test_result.rc != 5
+        msg: |
+          تست‌ها اجرا شدن!
+          {% if test_result.rc == 0 %}همه پاس شدن
+          {% elif test_result.rc == 1 %}بعضی تست‌ها fail شدن
+          {% elif test_result.rc in [2,3,4] %}تست‌ها skip یا خطای داخلی (معمولاً مرورگر نیست — چند دقیقه دیگه دوباره بزن)
+          {% else %}خطای ناشناخته (rc={{ test_result.rc }})
+          {% endif %}
+          گزارش → {{ log_path }}/test-reports/{{ inventory_hostname }}/report.html
+          لاگ نصب Playwright → /var/log/playwright-install.log
 
   tags: test

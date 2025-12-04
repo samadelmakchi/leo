@@ -12,13 +12,13 @@ all:
             customer_name: "سیمناد"
             customer_state: "up"
             customer_containers: "simnad_container"
-            customer_subdomain_gateway: "calibri"
-            customer_subdomain_portal: "portal"
-            customer_subdomain_backendportal: "backendportal"
-            customer_domain: "pardazeshafza.com"
+            customer_domain: "simnad.com"
             customer_gateway_ports: 8061
             customer_portal_ports: 7061
             customer_portal_frontend_ports: 6061
+            customer_websocket_ports: 5061
+            customer_lms_ports: 4061
+            customer_file_ports: 3061
 
         nikan:
           hosts:
@@ -27,13 +27,13 @@ all:
             customer_name: "نیکان"
             customer_state: "up"
             customer_containers: "nikan_container"
-            customer_subdomain_gateway: "calibri"
-            customer_subdomain_portal: "portal"
-            customer_subdomain_backendportal: "backendportal"
-            customer_domain: "nikan.ir"
+            customer_domain: "pardazeshafza.com"
             customer_gateway_ports: 8062
             customer_portal_ports: 7062
             customer_portal_frontend_ports: 6062
+            customer_websocket_ports: 5062
+            customer_lms_ports: 4062
+            customer_file_ports: 3062
 
         test:
           hosts:
@@ -45,10 +45,15 @@ all:
             customer_subdomain_gateway: "testcalibri"
             customer_subdomain_portal: "testportal"
             customer_subdomain_backendportal: "testbackendportal"
-            customer_domain: "test.local"
+            customer_subdomain_lms: "testlms"
+            customer_subdomain_file: "testfile"
+            customer_domain: "pardazeshafza.com"
             customer_gateway_ports: 8063
             customer_portal_ports: 7063
             customer_portal_frontend_ports: 6063
+            customer_websocket_ports: 5063
+            customer_lms_ports: 4063
+            customer_file_ports: 3063
             customer_backup_enabled: false
             customer_test_enabled: true
 
@@ -59,13 +64,13 @@ all:
             customer_name: "صمد"
             customer_state: "down"
             customer_containers: "smd_container"
-            customer_subdomain_gateway: "smdcalibri"
-            customer_subdomain_portal: "smdportal"
-            customer_subdomain_backendportal: "smdbackendportal"
             customer_domain: "elmakchi.ir"
             customer_gateway_ports: 8064
             customer_portal_ports: 7064
             customer_portal_frontend_ports: 6064
+            customer_websocket_ports: 5064
+            customer_lms_ports: 4064
+            customer_file_ports: 3064
 
       # ====================== متغیرهای مشترک همه مشتری‌ها ======================
       vars:
@@ -73,26 +78,39 @@ all:
         ansible_user: root
         project_path: /home/calibri
 
+        # sundomain پیش‌فرض
+        customer_subdomain_gateway: "calibri"
+        customer_subdomain_portal: "portal"
+        customer_subdomain_backendportal: "backendportal"
+        customer_subdomain_lms: "lms"
+        customer_subdomain_file: "file"
+
         # Git branch/tag پیش‌فرض
         customer_gateway_git_branches: "master"
         customer_portal_git_branches: "master"
         customer_portal_frontend_git_branches: "dev"
+        customer_lms_git_branches: "dev"
+        customer_file_git_branches: "dev"
         customer_gateway_git_tags: ""
         customer_portal_git_tags: ""
         customer_portal_frontend_git_tags: ""
+        customer_lms_git_tags: ""
+        customer_file_git_tags: ""
 
         # کنترل آپدیت
         customer_gateway_update: true
         customer_portal_update: true
         customer_portal_frontend_update: true
+        customer_lms_update: true
+        customer_file_update: true
 
         # بکاپ و تست
         customer_backup_enabled: true
         customer_backup_keep: 7
         customer_backup_cron_volumes: "0 3 * * 0"
         customer_backup_cron_databases: "30 1,9,17 * * *"
-        customer_test_enabled: true
-        customer_test_fail_fast: true
+        customer_test_enabled: false
+        customer_test_fail_fast: false
 
         # دامین و IP پیش‌فرض
         customer_domain: "pardazeshafza.com"
@@ -100,11 +118,21 @@ all:
 
         # دیتابیس‌ها (در محیط تست همه پسورد 1234 هست)
         portal_mysql_root_password: "1234"
-        portal_mysql_user: "calibri_user"
         portal_mysql_password: "1234"
+        portal_mysql_user: "root"
         portal_mysql_db_name: "calibri_portal"
 
         gateway_mysql_root_password: "1234"
-        gateway_mysql_user: "calibri_gateway"
         gateway_mysql_password: "1234"
+        gateway_mysql_user: "root"
         gateway_mysql_db_name: "calibri_gateway"
+
+        file_mysql_root_password: "1234"
+        file_mysql_password: "1234"
+        file_mysql_user: "file"
+        file_mysql_db_name: "file"
+
+        lms_mysql_root_password: "1234"
+        lms_mysql_password: "1234"
+        lms_mysql_user: "lms"
+        lms_mysql_db_name: "lms"

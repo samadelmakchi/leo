@@ -1,4 +1,3 @@
-# tests/regression.py
 import pytest
 
 @pytest.mark.regression
@@ -14,7 +13,6 @@ class TestCriticalRegression:
         assert r.status_code in [200, 401, 403]
 
     def test_no_500_errors_in_logs(self):
-        # اگر لاگ داکر در دسترس باشه (اختیاری)
         import subprocess
         try:
             result = subprocess.run(

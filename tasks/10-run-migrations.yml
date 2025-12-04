@@ -1,0 +1,41 @@
+- name: Run migrations only if code was updated
+  when:
+    - customer_state == "up"
+    - any_service_updated | default(false) | bool
+  block:
+    - name: Wait for containers to be healthy
+      community.docker.docker_compose:
+        project_src: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker"
+        files:
+        - compose.yml
+        - compose.override.yml
+        state: present
+      loop: "{{ projects }}"
+      loop_control:
+        loop_var: project
+      when: project.update | default(false) | bool
+      register: _wait
+      until: _wait is succeeded
+      retries: 10
+      delay: 8
+
+    - name: Composer install (portal)
+      community.docker.docker_container_exec:
+        container: "{{ customer_containers }}-portal"
+        command: composer install --no-dev --optimize-autoloader --no-interaction
+      ignore_errors: true
+      when: customer_portal_update | default(false) | bool
+
+    - name: Doctrine migrations (portal)
+      community.docker.docker_container_exec:
+        container: "{{ customer_containers }}-portal"
+        command: php bin/console doctrine:migrations:migrate --no-interaction --env=prod
+      ignore_errors: true
+      when: customer_portal_update | default(false) | bool
+
+    - name: Gateway migration
+      community.docker.docker_container_exec:
+        container: "{{ customer_containers }}-gateway"
+        command: php index.php migrate index false
+      ignore_errors: true
+      when: customer_gateway_update | default(false) | bool

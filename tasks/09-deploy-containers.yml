@@ -1,0 +1,20 @@
+- name: Start/Restart containers
+  community.docker.docker_compose:
+    project_src: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker"
+    project_name: "{{ customer_containers }}"
+    files:
+      - compose.yml
+      - compose.override.yml
+    state: present
+    recreate: smart
+    pull: always
+    remove_orphans: yes
+  loop: "{{ projects }}"
+  loop_control:
+    loop_var: project
+    label: "{{ project.name }}"
+  when:
+    - customer_state == "up"
+    - any_service_updated | default(false) | bool
+    - project.update | default(false) | bool
+  become: true

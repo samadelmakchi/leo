@@ -14,4 +14,4 @@ class TestSmoke(BaseTest):
 
     def test_backend_api_responds(self):
         r = self.session.get(f"{self.backend}/api/health", timeout=10)
-        assert r.status_code in [200, 401]  # 401 هم خوبه چون لاگین می‌خواد
+        assert r.status_code in [200, 401]

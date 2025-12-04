@@ -7,6 +7,8 @@
     - { folder: gateway }
     - { folder: portal }
     - { folder: portal-frontend }
+    - { folder: file }
+    - { folder: lms }
   when: customer_state == "up"
 
 - name: Ensure deep gateway directories (config + uploads) always exist

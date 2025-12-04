@@ -1,4 +1,3 @@
-# tests/load.py
 from locust import HttpUser, task, between, tag
 import os
 
@@ -22,6 +21,3 @@ class CalibriUser(HttpUser):
     @task(1)
     def heavy_report(self):
         self.client.get("/reports/sales", verify=False)
-
-# اجرا با دستور:
-# CUSTOMER_SUBDOMAIN_PORTAL=portal CUSTOMER_DOMAIN=simnad.com locust -f tests/load.py --headless -u 100 -r 10

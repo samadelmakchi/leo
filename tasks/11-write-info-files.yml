@@ -16,3 +16,5 @@
       - |
         mysql,{{ portal_mysql_db_name }},{{ portal_mysql_user }},{{ portal_mysql_password }},{{ customer_containers }}-portal-db
         mysql,{{ gateway_mysql_db_name }},{{ gateway_mysql_user }},{{ gateway_mysql_password }},{{ customer_containers }}-gateway-db
+        mysql,{{ file_mysql_db_name }},{{ file_mysql_user }},{{ file_mysql_password }},{{ customer_containers }}-file-db
+        mysql,{{ lms_mysql_db_name }},{{ lms_mysql_user }},{{ lms_mysql_password }},{{ customer_containers }}-lms-db

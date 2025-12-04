@@ -1,4 +1,3 @@
-# tests/accessibility.py
 import pytest
 from playwright.sync_api import sync_playwright
 
@@ -13,21 +12,18 @@ def test_wcag_contrast_and_focus():
         page = context.new_page()
         page.goto(os.getenv("PORTAL_URL"), wait_until="networkidle", timeout=60000)
 
-        # 1. همه لینک‌ها و دکمه‌ها باید focus بگیرن
         focusable = page.eval_on_selector_all(
             "a, button, button, input, textarea, [tabindex]:not([tabindex='-1'])",
             "els => els.length"
         )
         assert focusable > 0, "هیچ المان قابل فوکسی پیدا نشد!"
 
-        # 2. چک کردن alt برای عکس‌ها
         missing_alt = page.eval_on_selector_all(
             "img:not([alt]), img[alt='']",
             "els => els.map(el => el.src)"
         )
         assert len(missing_alt) == 0, f"عکس بدون alt پیدا شد: {missing_alt[:5]}"
 
-        # 3. چک کردن ARIA labels
         no_label = page.eval_on_selector_all(
             "[role='button']:not([aria-label]):not([aria-labelledby]), input:not([aria-label]):not([id])",
             "els => els.length"

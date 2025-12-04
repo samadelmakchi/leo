@@ -1,4 +1,4 @@
-- name: Ensure base project directory exists (همیشه اول)
+- name: Ensure base project directory exists
   ansible.builtin.file:
     path: "{{ project_path }}/{{ inventory_hostname }}"
     state: directory
