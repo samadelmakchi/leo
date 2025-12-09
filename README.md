@@ -12,11 +12,31 @@
 - گزارش HTML زیبا بعد از هر تست
 - اگر تست fail شد → دپلوی متوقف میشه (fail-fast)
 
-![Ansible](https://img.shields.io/badge/ansible-2.16+-ee0000?logo=ansible&logoColor=white)
-![Docker](https://img.shields.io/badge/docker-27.0+-2496ED?logo=docker&logoColor=white)
+<!-- ردیف اول: زیرساخت -->
+![Ansible](https://img.shields.io/badge/Ansible-2.16+-ee0000?logo=ansible&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-27.3+-2496ED?logo=docker&logoColor=white)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04_LTS-E95420?logo=ubuntu&logoColor=white)
+![Git](https://img.shields.io/badge/Git-F05032?logo=git&logoColor=white)
+<br>
+<!-- ردیف دوم: بک‌اند -->
+![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white)
 ![Laravel](https://img.shields.io/badge/Laravel-11-ff2d20?logo=laravel&logoColor=white)
 ![Symfony](https://img.shields.io/badge/Symfony-7-000000?logo=symfony&logoColor=white)
+![CodeIgniter](https://img.shields.io/badge/CodeIgniter-4-DD4814?logo=codeigniter&logoColor=white)
+<br>
+<!-- ردیف سوم: فرانت‌اند و ابزارها -->
+![Vue.js](https://img.shields.io/badge/Vue.js-3-4fc08d?logo=vuedotjs&logoColor=white)
+![Pinia](https://img.shields.io/badge/Pinia-2-fbbf24?logo=pinia&logoColor=black)
+![Axios](https://img.shields.io/badge/Axios-0.28-5a29e4?logo=axios&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-4-010101?logo=socket.io&logoColor=white)
+<br>
+<!-- ردیف چهارم: ابزارها و دیتابیس -->
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5-563d7c?logo=bootstrap&logoColor=white)
+![Composer](https://img.shields.io/badge/Composer-2.7-885630?logo=composer&logoColor=white)
+![NPM](https://img.shields.io/badge/NPM-10-CB3837?logo=npm&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-1.56-45ba4b?logo=playwright&logoColor=white)
+
 
 ---
 
