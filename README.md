@@ -89,6 +89,14 @@ ansible-playbook -i inventory.yml playbook.yml --limit simnad --extra-vars "cust
 # فقط تست‌های خاص
 pytest -m "smoke or regression" tests/
 
+# فقط میگریشن lms و file
+ansible-playbook -i inventory.yml playbook.yml --limit simnad -e "customer_lms_update=true customer_file_update=true"
+
+# فقط تست
+ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags test
+
+# فقط بکاپ بگیر (بدون تست)
+ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags backup
 ```
 
 ### آپدیت فقط یک سرویس خاص
@@ -121,50 +129,6 @@ customer_backup_cron_databases: "30 1,9,17 * * *" # هر روز 01:30، 09:30، 
 
 ---
 
-### اجرای تست فقط برای یک مشتری خاص
-
-```bash
-# فقط simnad رو دپلوی کن و تست کامل اجرا کن
-ansible-playbook -i inventory.yml playbook.yml \
-  --limit simnad \
-  --extra-vars "customer_test_enabled=true customer_test_fail_fast=true"
-
-# فقط تست اجرا کن (بدون دپلوی مجدد)
-ansible-playbook -i inventory.yml playbook.yml \
-  --limit simnad \
-  --extra-vars "customer_test_enabled=true" \
-  --tags "test"
-
-# فقط میگریشن lms و file
-ansible-playbook -i inventory.yml playbook.yml --limit simnad -e "customer_lms_update=true customer_file_update=true"
-
-# فقط تست
-ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags test
-
-# فقط بکاپ بگیر (بدون تست)
-ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags backup
-```
-
----
-
-### اختصاص ساب‌دامین در DirectAdmin
-
-| سرویس           | پورت پیش‌فرض | مثال ساب‌دامین              |
-| --------------- | ----------- | -------------------------- |
-| Gateway         | 8061+       | `calibri.simnad.com`       |
-| Portal Backend  | 7061+       | `backendportal.simnad.com` |
-| Portal Frontend | 6061+       | `portal.simnad.com`        |
-
-#### مراحل اضافه کردن رکورد:
-1. وارد DirectAdmin شوید → **DNS Management**  
-2. روی **Add Record** کلیک کنید → نوع: **A**  
-3. مثال:  
-   - **Name:** `calibri`  
-   - **Value:** `185.255.89.160`  
-4. ذخیره کنید → چند دقیقه صبر کنید تا DNS پروپاگیت شود
-
----
-
 ### ساختار ریستور خودکار (پوشه sql/)
 
 ```bash
@@ -181,16 +145,62 @@ sql/
 ├── simnad_file.env
 └── default_gateway.sql   # فقط برای gateway
 ```
+اگر فایل مشتری وجود داشته باشد → ریستور می‌شود
+
+اگر نبود → میگریشن خودش دیتابیس را می‌سازد
 
 ---
 
-### سرویس‌های مشتریان (نمونه)
+### اجرای تست فقط برای یک مشتری خاص
 
-| مشتری  | Gateway                  | Portal Backend                 | Portal Frontend         |
-| ------ | ------------------------ | ------------------------------ | ----------------------- |
-| سیمناد | `calibri.simnad.com`     | `backendportal.simnad.com`     | `portal.simnad.com`     |
-| نیکان  | `calibri.nikan.ir`       | `backendportal.nikan.ir`       | `portal.nikan.ir`       |
-| تست    | `testcalibri.test.local` | `testbackendportal.test.local` | `testportal.test.local` |
+```bash
+# فقط simnad رو دپلوی کن و تست کامل اجرا کن
+ansible-playbook -i inventory.yml playbook.yml \
+  --limit simnad \
+  --extra-vars "customer_test_enabled=true customer_test_fail_fast=true"
+
+# فقط تست اجرا کن (بدون دپلوی مجدد)
+ansible-playbook -i inventory.yml playbook.yml \
+  --limit simnad \
+  --extra-vars "customer_test_enabled=true" \
+  --tags "test"
+```
+
+---
+
+## گزارش‌ها
+
+| نوع گزارش            | مسیر                                                 |
+| -------------------- | ---------------------------------------------------- |
+| گزارش تست HTML       | `/home/calibri/log/test-reports/[مشتری]/report.html` |
+| گزارش تست JUnit (CI) | `/home/calibri/log/test-reports/[مشتری]/junit.xml`   |
+| لاگ بکاپ دیتابیس     | `/home/calibri/log/backup/[مشتری]_databases.log`     |
+| لاگ بکاپ فایل‌ها      | `/home/calibri/log/backup/[مشتری]_volumes.log`       |
+| لاگ نصب Playwright   | `/var/log/playwright-install.log`                    |
+
+> مثال برای مشتری `simnad`:
+> - گزارش تست: `/home/calibri/log/test-reports/simnad/report.html`
+> - لاگ بکاپ: `/home/calibri/log/backup/simnad_databases.log`
+
+---
+
+## تنظیم ساب‌دامین در DirectAdmin
+
+| سرویس           | پورت پیش‌فرض | مثال ساب‌دامین              | توضیحات               |
+| --------------- | ----------- | -------------------------- | --------------------- |
+| Gateway         | 8061+       | `calibri.simnad.com`       | پنل مدیریت اصلی       |
+| Portal Backend  | 7061+       | `backendportal.simnad.com` | بک‌اند Symfony         |
+| Portal Frontend | 6061+       | `portal.simnad.com`        | فرانت‌اند React/Vue    |
+| LMS             | 9061+       | `lms.simnad.com`           | سیستم مدیریت یادگیری  |
+| File Storage    | 10061+      | `files.simnad.com`         | فایل‌منیجر و ذخیره‌سازی |
+
+### نحوه اضافه کردن در DirectAdmin:
+1. وارد پنل DirectAdmin شوید → **DNS Management**  
+2. روی **Add Record** کلیک کنید  
+3. نوع: `A` → Name: `calibri` → Value: `185.255.89.160` → ذخیره  
+4. همین کار رو برای بقیه ساب‌دامین‌ها تکرار کنید
+
+DNS معمولاً بین ۱ تا ۱۰ دقیقه پروپاگیت می‌شود.
 
 ---
 
@@ -202,14 +212,4 @@ sql/
 
 ---
 
-### گزارش تست‌ها
-
-```
-/home/calibri/log/test-reports/[customer_name]/report.html
-```
-
----
-
 **ساخته شده با عشق توسط صمد المکچی**  
-
-
