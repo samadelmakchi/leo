@@ -5,9 +5,6 @@
     driver: bridge
     state: present
     attachable: yes
-    enable_ipv6: no
-    ipam_options:
-      subnet: "172.20.0.0/16"
   become: true
   tags:
     - network

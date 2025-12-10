@@ -1,31 +1,37 @@
+# tasks/update_service.yml ← نسخه نهایی، تمیز و بدون خطا
 ---
+- name: Set project variable (سازگاری با کدهای قدیمی)
+  set_fact:
+    project: "{{ current_project | default(item) }}"
+  tags: always
+
 - name: Check if repo directory has valid .git
   ansible.builtin.stat:
     path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/.git"
   register: git_dir
   changed_when: false
 
-- name: Remove broken/incomplete repo if .git is missing or corrupted
+- name: Remove broken/incomplete repo
   ansible.builtin.file:
     path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}"
     state: absent
-  when: git_dir.stat.exists == false
+  when: not git_dir.stat.exists
 
 - name: Ensure parent directory exists before clone
   ansible.builtin.file:
     path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}"
     state: directory
     mode: "0755"
-  when: git_dir.stat.exists == false
+  when: not git_dir.stat.exists
 
-- name: Clone or force-update repo to exact desired commit/tag/branch (full history)
+- name: Clone or force-update repo to desired version
   ansible.builtin.git:
     repo: "{{ project.repo }}"
     dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}"
     version: >-
-      {% if hostvars[inventory_hostname][project.tag_var] is defined and hostvars[inventory_hostname][project.tag_var] | trim | length > 0 %}
+      {% if hostvars[inventory_hostname][project.tag_var] | default('') | trim | length > 0 %}
         {{ hostvars[inventory_hostname][project.tag_var] | trim }}
-      {% elif hostvars[inventory_hostname][project.branch_var] is defined and hostvars[inventory_hostname][project.branch_var] | trim | length > 0 %}
+      {% elif hostvars[inventory_hostname][project.branch_var] | default('') | trim | length > 0 %}
         {{ hostvars[inventory_hostname][project.branch_var] | trim }}
       {% else %}
         main
@@ -38,35 +44,52 @@
   changed_when: git_result.after is defined and git_result.before is defined and git_result.after != git_result.before
 
 - name: Show git update summary
-  ansible.builtin.debug:
+  debug:
     msg: >-
       پروژه {{ project.name }}:
-      از {{ (git_result.before | default('none') | string)[:7] }}
-      → {{ (git_result.after | default('cloned') | string)[:7] }}
-      {% if git_result.after is not defined %} (کلون جدید){% endif %}
+      {{ git_result.before[:7] if git_result.before is defined and git_result.before else 'none' }}
+      →
+      {{ git_result.after[:7] if git_result.after is defined and git_result.after else 'cloned' }}
+      {% if git_result.after is not defined or not git_result.after %}(کلون جدید){% endif %}
   when: git_result is defined
 
-- name: Ensure docker subdirectory exists
+- name: Ensure docker directory exists
   ansible.builtin.file:
     path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker"
     state: directory
     mode: "0755"
 
-- name: Ensure gateway docker/init directory exists (for SQL init files)
+- name: Ensure gateway docker/init directory exists
   ansible.builtin.file:
     path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/init"
     state: directory
     mode: "0755"
   when: project.name == "gateway"
 
-- name: Deploy compose.override.yml from template
+# دیپلوی docker-compose.yml اصلی
+- name: Deploy docker-compose.yml
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/template/docker-compose-{{ project.name }}.yml.j2"
-    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/compose.override.yml"
+    src: >-
+      {% if project.folder == "portal-frontend" -%}
+      ../template/docker-compose-portal-frontend.yml.j2
+      {%- else -%}
+      ../template/docker-compose-{{ project.folder }}.yml.j2
+      {%- endif %}
+    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-compose.yml"
     mode: "0644"
     backup: yes
-  loop: "{{ projects }}"
-  loop_control:
-    loop_var: project
-  when: customer_state == "up"
-  become: true
+
+- name: Check if override file already exists
+  ansible.builtin.stat:
+    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-compose.override.yml"
+  register: override_stat
+  changed_when: false
+
+- name: Deploy compose.override.yml فقط یک بار
+  ansible.builtin.template:
+    src: >-
+      {% if project.folder == "portal-frontend" %}../template/docker-compose-portal-frontend.yml.j2{% else %}../template/docker-compose-{{ project.folder }}.yml.j2{% endif %}
+    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-compose.override.yml"
+    mode: "0644"
+    backup: yes
+  when: not override_stat.stat.exists

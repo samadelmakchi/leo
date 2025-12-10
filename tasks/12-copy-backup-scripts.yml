@@ -4,6 +4,7 @@
     src: "backup_scripts/{{ item }}.sh.j2"
     dest: "{{ backup_path }}/{{ inventory_hostname }}/{{ item }}.sh"
     mode: "0755"
+    force: yes
   loop:
     - backup_volumes
     - backup_databases

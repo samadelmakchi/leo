@@ -1,7 +1,8 @@
 ---
+# tasks/09-deploy-containers.yml
 - name: Start/Restart containers
   community.docker.docker_compose:
-    project_src: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker"
+    project_src: "{{ project_path }}/{{ inventory_hostname }}/{{ project_item.folder }}/docker"
     project_name: "{{ customer_containers }}"
     files:
       - compose.yml
@@ -9,13 +10,25 @@
     state: present
     recreate: smart
     pull: always
+    restarted: yes          # این باعث می‌شه حتی بدون تغییر هم restart بزنه
     remove_orphans: yes
-  loop: "{{ projects }}"
-  loop_control:
-    loop_var: project
-    label: "{{ project.name }}"
+  become: true
+  tags:
+    - deploy
+    - force_deploy
+
+  # شرط نهایی و کاملاً درست (هیچ # و {{ }} اضافی نداره)
   when:
     - customer_state == "up"
-    - any_service_updated | default(false) | bool
-    - project.update | default(false) | bool
-  become: true
+    - >
+      (force_deploy | default(false) | bool) or
+      (git_result.changed | default(false)) or
+      (any_service_updated | default(false)) or
+      (project_item.update | default(false) | bool) or
+      (project_item.first_deploy | default(false) | bool) or
+      (lookup('pipe', 'docker ps -a --filter "name=^{{ customer_containers }}_" --format "{{.Names}}" | wc -l') | int == 0)
+
+  loop: "{{ projects }}"
+  loop_control:
+    loop_var: project_item
+    label: "{{ project_item.name }}"

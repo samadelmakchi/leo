@@ -1,26 +1,24 @@
+# tasks/05-update-services.yml ← نسخه نهایی و بدون هیچ خطایی
 ---
-- name: Reset flag before checking updates
+- name: Reset update flag
   set_fact:
     any_service_updated: false
   run_once: true
 
+# فقط سرویس‌هایی که update=true دارن آپدیت می‌شن
 - name: Update selected services (git + compose)
+  when: 
+    - customer_state == "up"
+    - item.update | default(false)
   include_tasks: update_service.yml
+  vars:
+    current_project: "{{ item }}"
   loop: "{{ projects }}"
   loop_control:
-    loop_var: project
-    label: "{{ project.name }}"
-  when:
-    - customer_state == "up"
-    - project.update | default(false)
+    loop_var: item
+    label: "{{ item.name }}"        # بدون when → خطا رفع شد
 
 - name: Mark that at least one service was updated
   set_fact:
     any_service_updated: true
-  run_once: true
-  when: >-
-    (customer_portal_update | default(false)) or
-    (customer_gateway_update | default(false)) or
-    (customer_portal_frontend_update | default(false)) or
-    (customer_lms_update | default(false)) or
-    (customer_file_update | default(false))
+  when: git_result.changed

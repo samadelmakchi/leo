@@ -1,101 +1,129 @@
-# tasks/07-sql-and-uploads.yml ← نسخه نهایی بدون نیاز به default_portal.sql
+# tasks/07-sql-and-uploads.yml ← نسخهٔ نهایی، بدون خطا
 ---
-- name: Restore SQL + Uploads + .env for all services (only if files exist)
+- name: Restore SQL + Uploads + .env (فقط فایل‌های موجود)
   when: customer_state == "up"
   block:
 
-    # ===================================================================
-    # ۱. Gateway (CodeIgniter)
-    # ===================================================================
-    - name: "[Gateway] Restore SQL (فقط اگر فایل مشتری یا پیش‌فرض باشه)"
+    # ۱. Gateway → اولویت: simnad_gateway.sql → در غیر اینصورت default_gateway.sql
+    - name: "[Gateway] انتخاب فایل SQL مناسب"
+      set_fact:
+        gateway_sql_path: >-
+          {{ lookup('fileglob', playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_gateway.sql')
+             or (playbook_dir ~ '/sql/default_gateway.sql') }}
+
+    - name: "[Gateway] کپی SQL به init (همیشه انجام میشه)"
       ansible.builtin.copy:
-        src: "{{ 'sql/' + inventory_hostname + '_gateway.sql' if lookup('fileglob', 'sql/*_gateway.sql', errors='ignore') | length > 0 else 'sql/default_gateway.sql' }}"
+        src: "{{ gateway_sql_path }}"
         dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/docker/init/install.sql"
         mode: "0644"
+
+    # بقیه سرویس‌ها (همه با شرط ساده و ایمن)
+    - name: "[Gateway] کپی uploads"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_gateway_uploads.zip"
+        dest: /tmp/{{ inventory_hostname }}_gateway_uploads.zip
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_gateway_uploads.zip') is file
       ignore_errors: true
 
-    - name: "[Gateway] Restore uploads"
+    - name: "[Gateway] استخراج uploads"
       ansible.builtin.unarchive:
-        src: "sql/{{ inventory_hostname }}_gateway_uploads.zip"
+        src: /tmp/{{ inventory_hostname }}_gateway_uploads.zip
         dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/uploads"
         creates: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/uploads/index.html"
+        remote_src: yes
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_gateway_uploads.zip') is file
       ignore_errors: true
 
 
-    # ===================================================================
-    # ۲. Portal (Symfony) — فقط اگه فایل مشتری باشه
-    # ===================================================================
-    - name: "[Portal] Restore SQL (فقط اگر فایل مشتری باشه — بدون default!)"
+    # ۲. Portal
+    - name: "[Portal] Restore SQL"
       ansible.builtin.copy:
-        src: "sql/{{ inventory_hostname }}_portal.sql"
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_portal.sql"
         dest: "{{ project_path }}/{{ inventory_hostname }}/portal/docker/init/install.sql"
-        mode: "0644"
-      ignore_errors: true   # اگه فایل نباشه → خطا نده → میگریشن خودش می‌سازه
-
-    - name: "[Portal] Restore uploads"
-      ansible.builtin.unarchive:
-        src: "sql/{{ inventory_hostname }}_portal_uploads.zip"
-        dest: "{{ project_path }}/{{ inventory_hostname }}/portal/public/uploads"
-        creates: "{{ project_path }}/{{ inventory_hostname }}/portal/public/uploads/.gitkeep"
+        mode: "4"
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_portal.sql') is file
       ignore_errors: true
 
 
-    # ===================================================================
-    # ۳. Portal-Frontend — فقط اگه فایل وجود داشته باشه
-    # ===================================================================
-    - name: "[Frontend] Restore static files"
+    # ۳. Frontend
+    - name: "[Frontend] کپی و استخراج"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_frontend.zip"
+        dest: /tmp/{{ inventory_hostname }}_frontend.zip
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_frontend.zip') is file
+      ignore_errors: true
+
+    - name: "[Frontend] استخراج"
       ansible.builtin.unarchive:
-        src: "sql/{{ inventory_hostname }}_frontend.zip"
+        src: /tmp/{{ inventory_hostname }}_frontend.zip
         dest: "{{ project_path }}/{{ inventory_hostname }}/portal-frontend"
-        exclude:
-          - node_modules
-          - .git
+        exclude: [node_modules, .git]
+        remote_src: yes
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_frontend.zip') is file
       ignore_errors: true
 
 
-    # ===================================================================
-    # ۴. LMS (Laravel)
-    # ===================================================================
+    # ۴. LMS
     - name: "[LMS] Restore SQL"
       ansible.builtin.copy:
-        src: "sql/{{ inventory_hostname }}_lms.sql"
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_lms.sql"
         dest: "{{ project_path }}/{{ inventory_hostname }}/lms/docker/init/install.sql"
-        mode: "0644"
+        mode: "4"
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_lms.sql') is file
       ignore_errors: true
 
     - name: "[LMS] Restore uploads"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_lms_uploads.zip"
+        dest: /tmp/{{ inventory_hostname }}_lms_uploads.zip
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_lms_uploads.zip') is file
+      ignore_errors: true
+
+    - name: "[LMS] استخراج"
       ansible.builtin.unarchive:
-        src: "sql/{{ inventory_hostname }}_lms_uploads.zip"
+        src: /tmp/{{ inventory_hostname }}_lms_uploads.zip
         dest: "{{ project_path }}/{{ inventory_hostname }}/lms/storage/app"
+        remote_src: yes
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_lms_uploads.zip') is file
       ignore_errors: true
 
     - name: "[LMS] Restore .env"
       ansible.builtin.copy:
-        src: "sql/{{ inventory_hostname }}_lms.env"
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_lms.env"
         dest: "{{ project_path }}/{{ inventory_hostname }}/lms/.env"
         mode: "0600"
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_lms.env') is file
       ignore_errors: true
 
 
-    # ===================================================================
-    # ۵. File (Laravel)
-    # ===================================================================
+    # ۵. File (همان الگو)
     - name: "[File] Restore SQL"
       ansible.builtin.copy:
-        src: "sql/{{ inventory_hostname }}_file.sql"
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_file.sql"
         dest: "{{ project_path }}/{{ inventory_hostname }}/file/docker/init/install.sql"
-        mode: "0644"
+        mode: "4"
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_file.sql') is file
       ignore_errors: true
 
     - name: "[File] Restore uploads"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_file_uploads.zip"
+        dest: /tmp/{{ inventory_hostname }}_file_uploads.zip
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_file_uploads.zip') is file
+      ignore_errors: true
+
+    - name: "[File] استخراج"
       ansible.builtin.unarchive:
-        src: "sql/{{ inventory_hostname }}_file_uploads.zip"
+        src: /tmp/{{ inventory_hostname }}_file_uploads.zip
         dest: "{{ project_path }}/{{ inventory_hostname }}/file/storage/app"
+        remote_src: yes
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_file_uploads.zip') is file
       ignore_errors: true
 
     - name: "[File] Restore .env"
       ansible.builtin.copy:
-        src: "sql/{{ inventory_hostname }}_file.env"
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_file.env"
         dest: "{{ project_path }}/{{ inventory_hostname }}/file/.env"
         mode: "0600"
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_file.env') is file
       ignore_errors: true

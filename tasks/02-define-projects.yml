@@ -26,14 +26,14 @@
 
       - name: lms
         folder: lms
-        repo: "https://github.com/nasserman/calibri-lms"
+        repo: "git@github.com:nasserman/calibri-lms"
         branch_var: customer_lms_git_branches
         tag_var: customer_lms_git_tags
         update: "{{ customer_lms_update }}"
 
       - name: file
         folder: file
-        repo: "https://github.com/nasserman/calibri-file-storage"
+        repo: "git@github.com:nasserman/calibri-file-storage"
         branch_var: customer_file_git_branches
         tag_var: customer_file_git_tags
         update: "{{ customer_file_update }}"

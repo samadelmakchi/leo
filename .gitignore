@@ -1,4 +1,4 @@
 id_rsa
 
 sql/*
-!sql/default.sql
+!sql/default_gateway.sql

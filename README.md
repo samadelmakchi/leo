@@ -37,7 +37,6 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-1.56-45ba4b?logo=playwright&logoColor=white)
 
-
 ---
 
 ### دانلود پروژه

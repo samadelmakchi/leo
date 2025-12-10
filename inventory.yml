@@ -90,7 +90,7 @@ all:
         customer_portal_git_branches: "master"
         customer_portal_frontend_git_branches: "dev"
         customer_lms_git_branches: "dev"
-        customer_file_git_branches: "dev"
+        customer_file_git_branches: "smd"
         customer_gateway_git_tags: ""
         customer_portal_git_tags: ""
         customer_portal_frontend_git_tags: ""
