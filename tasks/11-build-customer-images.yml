@@ -2,8 +2,8 @@
 - name: Build customer-specific images only when needed (idempotent + fast)
   ansible.builtin.command: >
     docker compose
-    -f compose.yml
-    -f compose.override.yml
+    -f docker-compose.yml
+    -f docker-compose.override.yml
     build
     --pull
     {{ '--no-cache' if force_rebuild | default(false) else '' }}

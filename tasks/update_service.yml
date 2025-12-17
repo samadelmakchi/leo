@@ -90,7 +90,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 - name: Check if override file already exists
   ansible.builtin.stat:
-    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/compose.override.yml"
+    path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-"
   register: override_stat
   changed_when: false
 
@@ -99,7 +99,7 @@
   ansible.builtin.template:
     src: >-
       {% if project.folder == "portal-frontend" %}../template/docker-compose-portal-frontend.yml.j2{% else %}../template/docker-compose-{{ project.folder }}.yml.j2{% endif %}
-    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/compose.override.yml"
+    dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-compose.override.yml"
     mode: "0644"
     backup: yes
     force: yes

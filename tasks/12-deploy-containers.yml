@@ -1,25 +1,23 @@
 ---
-- name: Deploy / Restart all customer containers using native docker compose
-  ansible.builtin.command: >
-    docker compose
-    -f compose.yml
-    -f compose.override.yml
-    up
-    -d
-    --remove-orphans
-    --force-recreate
-    --renew-anon-volumes
-  args:
-    chdir: "{{ project_path }}/{{ inventory_hostname }}/{{ project_item.folder }}/docker"
-  register: docker_up
-  changed_when: >-
-    'Recreating' in docker_up.stdout or
-    'Creating' in docker_up.stdout or
-    'Starting' in docker_up.stdout
+- name: Deploy / Restart all customer containers using docker_compose_v2
+  community.docker.docker_compose_v2:
+    project_name: "{{ customer_containers }}"
+    project_src: "{{ project_path }}/{{ inventory_hostname }}/{{ project_item.folder }}/docker"
+    files:
+      - docker-compose.yml
+      - docker-compose.override.yml
+    state: present
+    remove_orphans: true
+    recreate: always
+    remove_volumes: true
   become: true
-  when: customer_state == "up"
   loop: "{{ projects }}"
   loop_control:
     loop_var: project_item
     label: "{{ project_item.name }}"
+  register: docker_up
+  retries: 3
+  delay: 10
+  until: docker_up is succeeded
+  when: customer_state == "up"
   tags: [deploy, force_deploy]
