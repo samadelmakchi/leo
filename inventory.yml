@@ -13,12 +13,7 @@ all:
             customer_state: "up"
             customer_containers: "simnad"
             customer_domain: "simnad.com"
-            customer_gateway_ports: 8061
-            customer_portal_ports: 7061
-            customer_portal_frontend_ports: 6061
-            customer_websocket_ports: 5061
-            customer_lms_ports: 4061
-            customer_file_ports: 3061
+            customer_subdomain_gateway: "admin"
 
         nikan:
           hosts:
@@ -28,12 +23,6 @@ all:
             customer_state: "up"
             customer_containers: "nikan"
             customer_domain: "pardazeshafza.com"
-            customer_gateway_ports: 8062
-            customer_portal_ports: 7062
-            customer_portal_frontend_ports: 6062
-            customer_websocket_ports: 5062
-            customer_lms_ports: 4062
-            customer_file_ports: 3062
 
         test:
           hosts:
@@ -48,12 +37,6 @@ all:
             customer_subdomain_lms: "testlms"
             customer_subdomain_file: "testfile"
             customer_domain: "pardazeshafza.com"
-            customer_gateway_ports: 8063
-            customer_portal_ports: 7063
-            customer_portal_frontend_ports: 6063
-            customer_websocket_ports: 5063
-            customer_lms_ports: 4063
-            customer_file_ports: 3063
             customer_backup_enabled: false
             customer_test_enabled: true
 
@@ -65,12 +48,6 @@ all:
             customer_state: "down"
             customer_containers: "smd"
             customer_domain: "elmakchi.ir"
-            customer_gateway_ports: 8064
-            customer_portal_ports: 7064
-            customer_portal_frontend_ports: 6064
-            customer_websocket_ports: 5064
-            customer_lms_ports: 4064
-            customer_file_ports: 3064
 
       # ====================== متغیرهای مشترک همه مشتری‌ها ======================
       vars:
@@ -91,6 +68,7 @@ all:
         customer_portal_frontend_git_branches: "dev"
         customer_lms_git_branches: "dev"
         customer_file_git_branches: "smd"
+        
         customer_gateway_git_tags: ""
         customer_portal_git_tags: ""
         customer_portal_frontend_git_tags: ""

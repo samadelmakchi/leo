@@ -10,24 +10,56 @@
     tests_path: "{{ playbook_dir }}/tests"
 
   tasks:
-    - include_tasks: tasks/00-create-network.yml
-      tags: always   # همیشه اجرا بشه
+  - include_tasks: tasks/00-create-network.yml
+    tags: [always, network]
 
-    - include_tasks: tasks/01-down-state.yml
-    - include_tasks: tasks/02-create-dirs.yml
-    - include_tasks: tasks/03-define-projects.yml
-    - include_tasks: tasks/04-ensure-project-dirs.yml
-    - include_tasks: tasks/05-ensure-gateway-docker-init.yml
-    - include_tasks: tasks/06-update-services.yml
-    - include_tasks: tasks/07-config-files.yml
-    - include_tasks: tasks/08-sql-and-uploads.yml
-    - include_tasks: tasks/09-pre-deploy-backup.yml
-    - include_tasks: tasks/10-pre-pull-images.yml
-    - include_tasks: tasks/11-build-customer-images.yml
-    - include_tasks: tasks/12-deploy-containers.yml
-    - include_tasks: tasks/13-run-migrations.yml
-    - include_tasks: tasks/14-write-info-files.yml
-    - include_tasks: tasks/15-copy-backup-scripts.yml
-    - include_tasks: tasks/16-setup-cron.yml
-    - include_tasks: tasks/20-run-tests.yml
-      tags: test
+  - include_tasks: tasks/01-down-state.yml
+    tags: [down]
+
+  - include_tasks: tasks/02-create-dirs.yml
+    tags: [setup]
+
+  - include_tasks: tasks/03-define-projects.yml
+    tags: [setup]
+
+  - include_tasks: tasks/04-ensure-project-dirs.yml
+    tags: [setup]
+
+  - include_tasks: tasks/05-ensure-gateway-docker-init.yml
+    tags: [docker, setup]
+
+  - include_tasks: tasks/06-update-services.yml
+    tags: [update]
+
+  - include_tasks: tasks/07-config-files.yml
+    tags: [config]
+
+  - include_tasks: tasks/08-sql-and-uploads.yml
+    tags: [data]
+
+  - include_tasks: tasks/09-pre-deploy-backup.yml
+    tags: [backup]
+
+  - include_tasks: tasks/10-pre-pull-images.yml
+    tags: [docker, deploy]
+
+  - include_tasks: tasks/11-build-customer-images.yml
+    tags: [build]
+
+  - include_tasks: tasks/12-deploy-containers.yml
+    tags: [deploy]
+
+  - include_tasks: tasks/13-run-migrations.yml
+    tags: [migration]
+
+  - include_tasks: tasks/14-write-info-files.yml
+    tags: [info]
+
+  - include_tasks: tasks/15-copy-backup-scripts.yml
+    tags: [backup]
+
+  - include_tasks: tasks/16-setup-cron.yml
+    tags: [cron]
+
+  - include_tasks: tasks/20-run-tests.yml
+    tags: [test]

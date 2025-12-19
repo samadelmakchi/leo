@@ -94,16 +94,13 @@ ansible-playbook -i inventory.yml playbook.yml
 ansible-playbook -i inventory.yml playbook.yml --limit simnad
 
 # خاموش کردن کامل یک مشتری (حذف کانتینرها + کرون جاب‌ها)
-ansible-playbook -i inventory.yml playbook.yml --limit test --extra-vars "customer_state=down"
+ansible-playbook -i inventory.yml playbook.yml --limit simnad --extra-vars "customer_state=down"
 
-# دپلوی + تست کامل برای یک مشتری
+# دپلوی + تست کامل برای یک مشتری  با گزارش HTML
 ansible-playbook -i inventory.yml playbook.yml --limit simnad --extra-vars "customer_test_enabled=true"
 
 # فقط تست اجرا کن (بدون دپلوی مجدد)
 ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags test --extra-vars "customer_test_enabled=true"
-
-# همه تست‌ها با گزارش HTML
-ansible-playbook -i inventory.yml playbook.yml --limit simnad --extra-vars "customer_test_enabled=true"
 
 # فقط تست‌های خاص
 pytest -m "smoke or regression" tests/
@@ -111,11 +108,17 @@ pytest -m "smoke or regression" tests/
 # فقط میگریشن lms و file
 ansible-playbook -i inventory.yml playbook.yml --limit simnad -e "customer_lms_update=true customer_file_update=true"
 
-# فقط تست
-ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags test
-
 # فقط بکاپ بگیر (بدون تست)
 ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags backup
+
+ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags "deploy,migration"
+
+# فقط simnad رو دپلوی کن و تست کامل اجرا کن
+ansible-playbook -i inventory.yml playbook.yml --limit simnad --extra-vars "customer_test_enabled=true customer_test_fail_fast=true"
+
+# فقط تست اجرا کن (بدون دپلوی مجدد)
+ansible-playbook -i inventory.yml playbook.yml --limit simnad --extra-vars "customer_test_enabled=true" --tags "test"
+
 ```
 
 ### آپدیت فقط یک سرویس خاص
@@ -167,23 +170,6 @@ sql/
 اگر فایل مشتری وجود داشته باشد → ریستور می‌شود
 
 اگر نبود → میگریشن خودش دیتابیس را می‌سازد
-
----
-
-### اجرای تست فقط برای یک مشتری خاص
-
-```bash
-# فقط simnad رو دپلوی کن و تست کامل اجرا کن
-ansible-playbook -i inventory.yml playbook.yml \
-  --limit simnad \
-  --extra-vars "customer_test_enabled=true customer_test_fail_fast=true"
-
-# فقط تست اجرا کن (بدون دپلوی مجدد)
-ansible-playbook -i inventory.yml playbook.yml \
-  --limit simnad \
-  --extra-vars "customer_test_enabled=true" \
-  --tags "test"
-```
 
 ---
 
