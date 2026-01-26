@@ -1,0 +1,210 @@
+<div id="volumesSection" class="content-section">
+    <div class="container-fluid mt-3 mb-3">
+        <div class="row">
+            <div class="col-9">
+                <div class="card">
+                    <div class="card-header">💾 ولوم‌های Docker</div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <button class="btn btn-primary" onclick="DockerVolumesUI.refreshVolumes()">
+                                🔄 بروزرسانی لیست
+                            </button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success" onclick="DockerVolumesUI.showCreateVolumeModal()">
+                                    ➕ ایجاد ولوم جدید
+                                </button>
+                                <button class="btn btn-danger" onclick="DockerVolumesUI.pruneVolumes()">
+                                    🗑️ حذف ولوم‌های بدون استفاده
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ردیف</th>
+                                        <th>نام ولوم</th>
+                                        <th>درایور</th>
+                                        <th>مسیر Mount</th>
+                                        <th>تاریخ ایجاد</th>
+                                        <th>برچسب‌ها</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="volumesTableBody">
+                                    <!-- داده‌های ولوم‌ها اینجا لود می‌شود -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <strong>📊 اطلاعات:</strong>
+                                <span id="volumesCount">0</span> ولوم یافت شد.
+                                فضای کل: <span id="totalSpace">محاسبه نشده</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جزئیات ولوم -->
+                <div class="card mt-3" id="volumeDetailsCard" style="display: none;">
+                    <div class="card-header">
+                        <span>🔍 جزئیات ولوم</span>
+                        <button class="btn btn-sm btn-close float-start"
+                            onclick="document.getElementById('volumeDetailsCard').style.display='none'"></button>
+                    </div>
+                    <div class="card-body" id="volumeDetailsContent">
+                        <!-- جزئیات ولوم اینجا نمایش داده می‌شود -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-3">
+                <div class="card">
+                    <div class="card-header">⚡ عملیات سریع</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>جستجوی ولوم</h6>
+                            <div class="input-group">
+                                <input type="text" id="searchVolume" class="form-control" placeholder="نام ولوم">
+                                <button class="btn btn-outline-primary" onclick="DockerVolumesUI.searchVolumes()">
+                                    🔍
+                                </button>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <h6>حذف ولوم</h6>
+                            <div class="input-group">
+                                <input type="text" id="volumeNameToRemove" class="form-control" placeholder="نام ولوم">
+                                <button class="btn btn-outline-danger" onclick="DockerVolumesUI.removeVolume()">
+                                    🗑️
+                                </button>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" class="form-check-input" id="forceRemoveVolume">
+                                <label class="form-check-label" for="forceRemoveVolume">
+                                    حذف اجباری
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <h6>آمار ولوم‌ها</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>تعداد کل:</span>
+                                    <span id="totalVolumes">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>درایور Local:</span>
+                                    <span id="localVolumes">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>با برچسب:</span>
+                                    <span id="labeledVolumes">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>فضای آزاد شده:</span>
+                                    <span id="reclaimedSpace">-</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button class="btn btn-info w-100 mt-2" onclick="DockerVolumesUI.refreshStats()">
+                            🔄 بروزرسانی آمار
+                        </button>
+                    </div>
+                </div>
+
+                <!-- عملیات پیشرفته -->
+                <div class="card mt-3">
+                    <div class="card-header">🔧 عملیات پیشرفته</div>
+                    <div class="card-body">
+                        <button class="btn btn-outline-secondary w-100 mb-2" onclick="DockerVolumesUI.backupAllVolumes()">
+                            💾 بکاپ تمام ولوم‌ها
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" onclick="DockerVolumesUI.cleanupOrphanedVolumes()">
+                            🧹 پاکسازی ولوم‌های بی‌استفاده
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال ایجاد ولوم جدید -->
+<div class="modal fade" id="createVolumeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ ایجاد ولوم جدید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createVolumeForm">
+                    <div class="mb-3">
+                        <label class="form-label">نام ولوم</label>
+                        <input type="text" class="form-control" id="volumeName" placeholder="مثال: app-data" required>
+                        <div class="form-text">نام باید منحصر به فرد باشد</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">درایور</label>
+                        <select class="form-select" id="volumeDriver">
+                            <option value="local" selected>Local</option>
+                            <option value="nfs">NFS</option>
+                            <option value="cifs">CIFS/SMB</option>
+                            <option value="tmpfs">Tmpfs</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="driverOptionsSection" style="display: none;">
+                        <label class="form-label">تنظیمات درایور (اختیاری)</label>
+                        <textarea class="form-control" id="driverOptions" rows="3" placeholder='{"type": "nfs", "o": "addr=192.168.1.100,rw", "device": ":/path/to/share"}'></textarea>
+                        <div class="form-text">فرمت JSON - برای درایورهای خاص</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">برچسب‌ها (Labels)</label>
+                        <textarea class="form-control" id="volumeLabels" rows="2" placeholder='{"project": "myapp", "environment": "production"}'></textarea>
+                        <div class="form-text">فرمت JSON - اختیاری</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لغو</button>
+                <button type="button" class="btn btn-primary" onclick="DockerVolumesUI.createVolume()">
+                    ایجاد ولوم
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال مشاهده محتوای ولوم -->
+<div class="modal fade" id="volumeInspectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📂 محتوای ولوم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="volumeInspectContent">
+                    <!-- محتوای ولوم اینجا نمایش داده می‌شود -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,3 +1,7 @@
+"""
+Security Test
+"""
+
 import requests
 
 class TestSecurity:

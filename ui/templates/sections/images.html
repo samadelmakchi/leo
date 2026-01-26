@@ -1,0 +1,91 @@
+<div id="imagesSection" class="content-section">
+    <div class="container-fluid mt-3 mb-3">
+        <div class="row">
+            <div class="col-9">
+                <div class="card">
+                    <div class="card-header">📦 مدیریت ایمیج های داکر</div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <button class="btn btn-primary" onclick="DockerUI.refreshImages()">
+                                🔄 بروزرسانی لیست
+                            </button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-danger" onclick="DockerUI.pruneImages()">
+                                    🗑️ حذف ایمیج‌های بدون استفاده
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ردیف</th>
+                                        <th>ID</th>
+                                        <th>Repository</th>
+                                        <th>Tag</th>
+                                        <th>سایز</th>
+                                        <th>تاریخ ایجاد</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="imagesTableBody">
+                                    <!-- داده‌های ایمیج‌ها اینجا لود می‌شود -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <strong>📊 اطلاعات:</strong>
+                                <span id="imagesCount">0</span> ایمیج یافت شد.
+                                مجموع سایز: <span id="totalSize">0 MB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card">
+                    <div class="card-header">⚡ عملیات سریع</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>جستجوی ایمیج</h6>
+                            <div class="input-group">
+                                <input type="text" id="searchImage" class="form-control" placeholder="نام ایمیج یا ID">
+                                <button class="btn btn-outline-primary" onclick="DockerUI.searchImages()">🔍</button>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <h6>حذف ایمیج</h6>
+                            <div class="input-group">
+                                <input type="text" id="imageIdToRemove" class="form-control" placeholder="Image ID یا نام">
+                                <button class="btn btn-outline-danger" onclick="DockerUI.removeImage()">🗑️</button>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" class="form-check-input" id="forceRemove">
+                                <label class="form-check-label" for="forceRemove">حذف اجباری (Force)</label>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <h6>اطلاعات سیستم</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>تعداد ایمیج:</span>
+                                    <span id="sysImageCount">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>فضای استفاده شده:</span>
+                                    <span id="sysDiskUsage">-</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-info w-100 mt-2" onclick="DockerUI.loadSystemInfo()">
+                            🔄 بروزرسانی اطلاعات سیستم
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

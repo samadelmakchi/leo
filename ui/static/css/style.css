@@ -1,7 +1,129 @@
+@font-face {    /* light */
+    font-family: 'IranSans';
+    src: url('../font/iran_sans_web_fa_num_light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {    /* normal/regular */
+    font-family: 'IranSans';
+    src: url('../font/iran_sans_web_fa_num.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {    /* medium */
+    font-family: 'IranSans';
+    src: url('../font/iran_sans_web_fa_num_medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {    /* semi-bold */
+    font-family: 'IranSans';
+    src: url('../font/iran_sans_web_fa_num_medium.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {    /* bold */
+    font-family: 'IranSans';
+    src: url('../font/iran_sans_web_fa_num_bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {    /* black/extra-bold */
+    font-family: 'IranSans';
+    src: url('../font/iran_sans_web_fa_num_black.ttf') format('truetype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+.light-text {
+    font-weight: 300;
+}
+
+.regular-text {
+    font-weight: 400;
+}
+
+.medium-text {
+    font-weight: 500;
+}
+
+.semi-bold-text {
+    font-weight: 600;
+}
+
+.bold-text {
+    font-weight: 700;
+}
+
+.black-text {
+    font-weight: 900;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'IranSans', sans-serif;
+}
+
+h1 {
+    font-weight: 700;
+}
+
+h2 {
+    font-weight: 600;
+}
+
+h3 {
+    font-weight: 500;
+}
+
 body {
-    font-family: 'Noto Sans Arabic', sans-serif;
+    font-family: 'IranSans', sans-serif;
     background-color: #f4f6f8;
     overflow-x: hidden;
+    font-weight: 400;
+}
+
+/* Animation for section loading */
+.content-section {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Loading indicator */
+.loading-section {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
 }
 
 .card {
@@ -88,6 +210,12 @@ header h1 {
     font-weight: 500;
 }
 
+#sidebar a.active {
+    color: #000000;
+    background-color: #dcdcdc;
+    border-radius: 5px;
+}
+
 #sidebar a:hover {
     background-color: #e9ecef;
     border-radius: 5px;
@@ -108,4 +236,31 @@ footer {
     background-color: #343a40;
     color: #fff;
     font-size: 0.7em;
+}
+
+.log-preview {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.log-line {
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.bg-danger-light {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.bg-warning-light {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.bg-success-light {
+    background-color: rgba(25, 135, 84, 0.1);
 }

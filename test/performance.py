@@ -1,3 +1,7 @@
+"""
+Performance Test
+"""
+
 import time
 import statistics
 

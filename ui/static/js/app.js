@@ -1,434 +1,348 @@
-/*************************
- * Globals
- *************************/
-let inventoryData = {};
+/**
+ * Main JavaScript file for the application
+ */
 
-// لیست ماژول‌ها به‌صورت سراسری
-const modulesList = ["gateway", "portal", "portal_frontend", "lms", "file"];
+// Global variables
+let currentSection = 'home';
+let loadedSections = new Set(['home']); // بخش‌های لود شده
 
-/*************************
- * Validators
- *************************/
-function isEnglish(value) {
-    return /^[\x00-\x7F]*$/.test(value);
+// ============================================================================
+// Dynamic Content Loading
+// ============================================================================
+
+/**
+ * Load a section dynamically
+ */
+async function loadSection(sectionId) {
+    // اگر قبلاً لود شده، فقط نمایش بده
+    if (loadedSections.has(sectionId)) {
+        document.getElementById(`${sectionId}Section`).style.display = 'block';
+        return;
+    }
+
+    try {
+        showToast(`در حال بارگذاری بخش ${sectionId}...`, 'info');
+
+        const response = await fetch(`/section/${sectionId}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const html = await response.text();
+
+        // ایجاد container برای بخش جدید
+        const sectionDiv = document.createElement('div');
+        sectionDiv.id = `${sectionId}Section`;
+        sectionDiv.className = 'content-section';
+
+        // اضافه کردن HTML دریافتی
+        sectionDiv.innerHTML = html;
+
+        // اضافه کردن به main content
+        document.getElementById('mainContent').appendChild(sectionDiv);
+
+        // اضافه کردن به لیست بخش‌های لود شده
+        loadedSections.add(sectionId);
+
+        showToast(`بخش ${sectionId} با موفقیت بارگذاری شد`, 'success');
+
+    } catch (error) {
+        console.error(`Error loading section ${sectionId}:`, error);
+
+        // نمایش پیام خطا
+        const errorDiv = document.createElement('div');
+        errorDiv.id = `${sectionId}Section`;
+        errorDiv.className = 'content-section';
+        errorDiv.innerHTML = `
+            <div class="container-fluid mt-3 mb-3">
+                <div class="alert alert-danger">
+                    <h4>خطا در بارگذاری بخش</h4>
+                    <p>بخش "${sectionId}" قابل بارگذاری نیست.</p>
+                    <button class="btn btn-primary mt-2" onclick="loadSection('${sectionId}')">
+                        تلاش مجدد
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('mainContent').appendChild(errorDiv);
+        loadedSections.add(sectionId);
+
+        showToast(`خطا در بارگذاری بخش ${sectionId}`, 'error');
+    }
 }
 
-function isValidDomain(value) {
-    return /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(value);
+/**
+ * Unload a section (optional - برای بهینه‌سازی)
+ */
+function unloadSection(sectionId) {
+    if (sectionId === 'home') return; // صفحه اصلی همیشه می‌ماند
+
+    const section = document.getElementById(`${sectionId}Section`);
+    if (section) {
+        section.style.display = 'none';
+        // یا می‌توانید کاملاً حذف کنید:
+        // section.remove();
+        // loadedSections.delete(sectionId);
+    }
 }
 
-function isValidIP(value) {
-    return /^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){2}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/.test(value);
-}
+// ============================================================================
+// Updated showSection function
+// ============================================================================
 
-/*************************
- * Fetch Inventory
- *************************/
-fetch("/api/inventory")
-    .then(res => res.json())
-    .then(data => {
-        inventoryData = data;
-        loadCustomers();
-        updateCustomerState();
+/**
+ * Show a specific section
+ */
+function showSection(sectionId, title) {
+    // مخفی کردن تمام بخش‌ها
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.style.display = 'none';
     });
 
-/*************************
- * Helpers
- *************************/
-// ادغام متغیرهای مشتری با پیش‌فرض
-function getCustomerVars(customer) {
-    const customerVars = inventoryData.all.hosts[customer]?.vars || {};
-    const defaultVars = inventoryData.all.vars || {};
-    return { ...defaultVars, ...customerVars };
-}
+    // اگر بخش هنوز لود نشده، لود کن
+    if (!loadedSections.has(sectionId)) {
+        loadSection(sectionId).then(() => {
+            // بعد از لود شدن، نمایش بده
+            const targetSection = document.getElementById(sectionId + 'Section');
+            if (targetSection) {
+                targetSection.style.display = 'block';
+                currentSection = sectionId;
 
-/*************************
- * Update Customer State & Reload Page
- *************************/
-function updateCustomerState() {
-    const select = document.getElementById("customerSelect");
-    const customer = select.value;
-
-    if (!inventoryData.all.hosts[customer]) return;
-
-    const mergedVars = getCustomerVars(customer);
-
-    // بروزرسانی متن وضعیت
-    const stateText = document.getElementById("customerStateText");
-    stateText.innerText = mergedVars.customer_state === "up" ? "فعال" : "غیرفعال";
-
-    // بروزرسانی radio
-    const radios = document.querySelectorAll('input[name="customer_state"]');
-    radios.forEach(r => r.checked = r.value === mergedVars.customer_state);
-
-    // بروزرسانی تمام تب‌ها
-    renderTabs(mergedVars);
-}
-
-
-/*************************
- * Load Customers
- *************************/
-function loadCustomers() {
-    const select = document.getElementById("customerSelect");
-
-    select.innerHTML = "";
-
-    Object.entries(inventoryData.all.hosts).forEach(([host, data]) => {
-        const nameFa = data.vars.customer_name;
-        const opt = document.createElement("option");
-        opt.value = host;
-        opt.innerText = nameFa;
-        select.appendChild(opt);
-    });
-}
-
-/*************************
- * Tabs Renderer
- *************************/
-function renderTabs(vars) {
-    const modules = {};
-    const domain = {};
-    const backup = {};
-    const test = {};
-    const database = {};
-
-    Object.entries(vars).forEach(([key, value]) => {
-
-        if (key === "customer_domain" || key === "customer_url" || key.startsWith("customer_subdomain_")) {
-            domain[key] = value;
-        }
-        else if (key.startsWith("customer_backup_")) {
-            backup[key] = value;
-        }
-        else if (key.startsWith("customer_test_")) {
-            test[key] = value;
-        }
-        else if (key.includes("_mysql_")) {
-            const service = key.split("_mysql_")[0];
-            database[service] ??= {};
-            database[service][key] = value;
-        }
-        else if (key.startsWith("customer_") && !key.includes("subdomain") && key !== "customer_state") {
-            let service = key.replace("customer_", "").split("_git")[0].split("_update")[0];
-
-            if (!modulesList.includes(service)) return;
-            modules[service] ??= {};
-            modules[service][key] = value;
-        }
-    });
-
-    // رندر هر بخش با ترتیب Switch → Text → Cron
-    renderSection("modules", modules, true);
-    renderSection("domain", domain);
-    renderSection("backup", backup);
-    renderSection("test", test);
-    renderSection("database", database, true);
-}
-
-/*************************
- * Inputs Renderer (ترتیب Switch → Text → Cron)
- *************************/
-function renderInputs(items) {
-    const entries = Object.entries(items);
-
-    // Boolean اول
-    const booleans = entries.filter(([key, value]) => typeof value === "boolean");
-    // Cron آخر
-    const crons = entries.filter(([key, value]) => key.includes("cron_"));
-    // بقیه متون
-    const texts = entries.filter(([key, value]) => typeof value !== "boolean" && !key.includes("cron_"));
-
-    return [
-        ...booleans.map(([k, v]) => renderInput(k, v)),
-        ...texts.map(([k, v]) => renderInput(k, v)),
-        ...crons.map(([k, v]) => renderInput(k, v))
-    ].join("");
-}
-
-/*************************
- * Section Renderer
- *************************/
-function renderSection(targetId, data, grouped = false) {
-    const container = document.getElementById(targetId);
-    container.innerHTML = "";
-
-    if (grouped) {
-        Object.entries(data).forEach(([group, items]) => {
-            container.innerHTML += `
-                <h4 class="mt-3 p-2 text-end bg-light rounded border border-secondary text-capitalize">${group}</h4>
-                ${renderInputs(items)}
-            `;
+                // فراخوانی تابع initialize مخصوص هر بخش
+                initializeSection(sectionId);
+            }
         });
     } else {
-        container.innerHTML = renderInputs(data);
-    }
-}
+        // اگر قبلاً لود شده، فقط نمایش بده
+        const targetSection = document.getElementById(sectionId + 'Section');
+        if (targetSection) {
+            targetSection.style.display = 'block';
+            currentSection = sectionId;
 
-/*************************
- * Input Renderer
- *************************/
-function renderInput(key, value) {
-
-    if (typeof value === "boolean") {
-        return renderBooleanSwitch(key, value);
+            // فراخوانی تابع initialize مخصوص هر بخش
+            initializeSection(sectionId);
+        }
     }
 
-    if (key.includes("cron_")) {
-        return renderCron(key, value);
-    }
-
-    let extraValidation = "";
-
-    if (key === "customer_domain") {
-        extraValidation = `onblur="if(!isValidDomain(this.value)) alert('دامنه نامعتبر است')"`
-    }
-
-    if (key === "customer_url") {
-        extraValidation = `onblur="if(!isValidIP(this.value)) alert('IP نامعتبر است')"`
-    }
-
-    return `
-        <div class="mb-2 d-flex align-items-center gap-2">
-            <label class="form-label mb-0">${labelsFa[key] ?? key}</label>
-            <input class="form-control"
-                   value="${value}"
-                   oninput="if(!isEnglish(this.value)) this.value=this.value.replace(/[^\x00-\x7F]/g,'')"
-                   ${extraValidation}>
-        </div>
-    `;
+    // آپدیت عنوان صفحه
+    document.title = 'لئو | ' + title;
+    document.getElementById("menu-title").innerText = title;
 }
 
-/*************************
- * Boolean → Bootstrap Switch
- *************************/
-function renderBooleanSwitch(name, value) {
-    const id = `switch_${name}`;
+// ============================================================================
+// Updated initializeSection function
+// ============================================================================
 
-    return `
-        <div class="form-check form-switch mb-3 d-flex align-items-center gap-2">
-            <input class="form-check-input"
-                   type="checkbox"
-                   id="${id}"
-                   ${value ? "checked" : ""}>
-            <label class="form-check-label" for="${id}">
-                ${labelsFa[name] ?? name}
-            </label>
-        </div>
-    `;
-}
+/**
+ * Initialize a specific section
+ */
+function initializeSection(sectionId) {
+    console.log(`Initializing section: ${sectionId}`);
 
-/*************************
- * Cron UI
- *************************/
-function renderCron(name, value) {
-    const parts = value.split(" ");
-
-    return `
-        <hr>
-        <div class="mb-3">
-            <label class="form-label">${labelsFa[name] ?? name}</label>
-            <div class="row d-block">
-                <div class="col mt-1"><div class="w-100 ">دقیقه: </div><input class="form-control" value="${parts[0] || "*"}" placeholder="دقیقه"></div>
-                <div class="col mt-1"><div class="w-100 ">ساعت: </div><input class="form-control" value="${parts[1] || "*"}" placeholder="ساعت"></div>
-                <div class="col mt-1"><div class="w-100 ">روز: </div><input class="form-control" value="${parts[2] || "*"}" placeholder="روز"></div>
-                <div class="col mt-1"><div class="w-100 ">روز هفته: </div><input class="form-control" value="${parts[4] || "*"}" placeholder="روز هفته"></div>
-            </div>
-        </div>
-    `;
-}
-
-/*************************
- * Run Playbook
- *************************/
-function runPlaybook() {
-    const customer = document.getElementById("customerSelect").value;
-
-    fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customer })
-    })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("result").innerText =
-                "اجرای playbook آغاز شد";
-        });
-}
-
-/*************************
- * Save Customer Vars
- *************************/
-function saveCustomerVars() {
-    const customer = document.getElementById("customerSelect").value;
-
-    const mergedVars = getCustomerVars(customer);
-    const inputs = document.querySelectorAll("#modules input, #domain input, #backup input, #test input, #database input");
-
-    const newVars = {};
-
-    inputs.forEach(input => {
-        const key = input.previousElementSibling?.innerText || input.name;
-        let value = input.type === "checkbox" ? input.checked : input.value;
-        newVars[key] = value;
-    });
-
-    fetch("/api/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customer, vars: newVars })
-    })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("result").innerText =
-                "تغییرات ذخیره شد";
-        });
-}
-
-/*************************
- * Down Customer 
- *************************/
-function downCustomer() {
-    const customer = document.getElementById("customerSelect").value;
-
-    fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer,
-            extra_vars: { customer_state: "down" } // ← اضافه شدن متغیر extra
-        })
-    })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("result").innerText =
-                `اجرای playbook برای ${customer} با customer_state=down آغاز شد`;
-        });
-}
-
-/*************************
-// دپلوی + تست کامل
- *************************/
-function testFull() {
-    const customer = document.getElementById("customerSelect").value;
-
-    fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer,
-            extra_vars: { customer_test_enabled: true }
-        })
-    })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("result").innerText =
-                `تست کامل + دپلوی برای ${customer} آغاز شد`;
-        });
-}
-
-/*************************
-// فقط تست (بدون دپلوی مجدد)
- *************************/
-function testOnly() {
-    const customer = document.getElementById("customerSelect").value;
-
-    fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer,
-            extra_vars: { customer_test_enabled: true },
-            tags: "test"  // فقط اجرا با تگ test
-        })
-    })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("result").innerText =
-                `اجرای تست فقط برای ${customer} آغاز شد`;
-        });
-}
-
-/*************************
-// دپلوی + تست کامل + fail-fast
- *************************/
-function testFailFast() {
-    const customer = document.getElementById("customerSelect").value;
-
-    fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer,
-            extra_vars: {
-                customer_test_enabled: true,
-                customer_test_fail_fast: true
+    // Map section IDs to their initialization functions
+    const initializationMap = {
+        'customers': () => {
+            if (typeof AnsibleUI !== 'undefined' && typeof AnsibleUI.initCustomersSection === 'function') {
+                return AnsibleUI.initCustomersSection();
+            } else {
+                console.warn('AnsibleUI module not loaded');
+                showToast('ماژول مدیریت مشتریان بارگذاری نشده است', 'warning');
             }
-        })
-    })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("result").innerText =
-                `دپلوی + تست کامل + fail-fast برای ${customer} آغاز شد`;
-        });
+        },
+        'images': () => {
+            if (typeof DockerUI !== 'undefined' && typeof DockerUI.initImagesSection === 'function') {
+                return DockerUI.initImagesSection();
+            } else {
+                console.warn('DockerUI module not loaded');
+                showToast('ماژول مدیریت ایمیج‌ها بارگذاری نشده است', 'warning');
+            }
+        },
+        'networks': () => {
+            if (typeof DockerNetworksUI !== 'undefined' && typeof DockerNetworksUI.initNetworksSection === 'function') {
+                return DockerNetworksUI.initNetworksSection();
+            } else {
+                console.warn('DockerNetworksUI module not loaded');
+                showToast('ماژول مدیریت شبکه‌ها بارگذاری نشده است', 'warning');
+            }
+        },
+        'volumes': () => {
+            if (typeof DockerVolumesUI !== 'undefined' && typeof DockerVolumesUI.initVolumesSection === 'function') {
+                return DockerVolumesUI.initVolumesSection();
+            } else {
+                console.warn('DockerVolumesUI module not loaded');
+                showToast('ماژول مدیریت ولوم‌ها بارگذاری نشده است', 'warning');
+            }
+        },
+        'containers': () => {
+            if (typeof DockerContainersUI !== 'undefined' && typeof DockerContainersUI.initContainersSection === 'function') {
+                return DockerContainersUI.initContainersSection();
+            } else {
+                console.warn('DockerContainersUI module not loaded');
+                showToast('ماژول مدیریت کانتینرها بارگذاری نشده است', 'warning');
+            }
+        },
+        'system': () => {
+            if (typeof SystemUI !== 'undefined' && typeof SystemUI.initSystemSection === 'function') {
+                return SystemUI.initSystemSection();
+            } else {
+                console.warn('SystemUI module not loaded');
+                showToast('ماژول اطلاعات سیستم بارگذاری نشده است', 'warning');
+            }
+        },
+        'crons': () => {
+            if (typeof CronUI !== 'undefined' && typeof CronUI.initCronsSection === 'function') {
+                return CronUI.initCronsSection();
+            } else {
+                console.warn('CronUI module not loaded');
+                showToast('ماژول مدیریت cron jobs بارگذاری نشده است', 'warning');
+            }
+        },
+        'backup': () => {
+            if (typeof BackupUI !== 'undefined' && typeof BackupUI.initBackupSection === 'function') {
+                return BackupUI.initBackupSection();
+            } else {
+                console.warn('BackupUI module not loaded');
+                showToast('ماژول مدیریت بک‌اپ‌ها بارگذاری نشده است', 'warning');
+            }
+        },
+        'logs': () => {
+            if (typeof LogsUI !== 'undefined' && typeof LogsUI.initLogsSection === 'function') {
+                return LogsUI.initLogsSection();
+            } else {
+                console.warn('LogsUI module not loaded');
+                showToast('ماژول مدیریت لاگ‌ها بارگذاری نشده است', 'warning');
+            }
+        },
+    };
+
+    // Call the appropriate initialization function
+    if (initializationMap[sectionId]) {
+        try {
+            const result = initializationMap[sectionId]();
+            if (result && typeof result.then === 'function') {
+                // Handle promise if returned
+                result.catch(error => {
+                    console.error(`Error initializing ${sectionId} section:`, error);
+                });
+            }
+        } catch (error) {
+            console.error(`Error initializing ${sectionId} section:`, error);
+        }
+    }
 }
 
-/*************************
-// تهیه نسخه بکاپ
- *************************/
-function backupCustomer() {
-    const customer = document.getElementById("customerSelect").value;
+// ============================================================================
+// Cache Management
+// ============================================================================
 
-    fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer,
-            tags: "backup"  // ← فقط تگ backup
-        })
-    })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("result").innerText =
-                `اجرای بکاپ برای ${customer} آغاز شد`;
-        });
-}
+/**
+ * Clear all cached sections except home
+ */
+function clearSectionCache() {
+    const sectionsToRemove = [];
 
-/*************************
-// اجرای پلی بوک
- *************************/
-function runPlaybook() {
-    const customer = document.getElementById("customerSelect").value;
-    const vars = getCustomerVars(customer);
-
-    const activeUpdates = {};
-
-    modulesList.forEach(mod => {
-        const key = `customer_${mod}_update`;
-        if (vars[key]) {
-            activeUpdates[key] = true;
+    loadedSections.forEach(sectionId => {
+        if (sectionId !== 'home') {
+            const section = document.getElementById(`${sectionId}Section`);
+            if (section) {
+                sectionsToRemove.push(section);
+            }
         }
     });
 
-    // اگر همه true باشند، extra_vars خالی است
-    const extraVars = Object.keys(activeUpdates).length === modulesList.length ? {} : activeUpdates;
+    // حذف از DOM
+    sectionsToRemove.forEach(section => {
+        section.remove();
+    });
 
-    fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            customer,
-            extra_vars: extraVars
-        })
-    })
-        .then(res => res.json())
-        .then(() => {
-            if (Object.keys(extraVars).length === 0) {
-                document.getElementById("result").innerText =
-                    `بروزرسانی کامل برای ${customer} آغاز شد`;
-            } else {
-                document.getElementById("result").innerText =
-                    `بروزرسانی ماژول‌های فعال برای ${customer} آغاز شد: ${Object.keys(extraVars).join(", ")}`;
-            }
-        });
+    // پاک کردن cache
+    loadedSections.clear();
+    loadedSections.add('home');
+
+    console.log('Section cache cleared');
+    showToast('کش بخش‌ها پاک شد', 'info');
 }
+
+/**
+ * Preload important sections
+ */
+function preloadSections() {
+    const importantSections = ['customers', 'images']; // بخش‌های مهم
+
+    importantSections.forEach(sectionId => {
+        if (!loadedSections.has(sectionId)) {
+            loadSection(sectionId).then(() => {
+                console.log(`Preloaded section: ${sectionId}`);
+                // مخفی کردن بعد از لود
+                document.getElementById(`${sectionId}Section`).style.display = 'none';
+            });
+        }
+    });
+}
+
+// ============================================================================
+// Event Listeners for dynamic content
+// ============================================================================
+
+/**
+ * Setup event listeners for dynamic content
+ */
+function setupDynamicContentListeners() {
+    // Event delegation برای المنت‌هایی که بعداً اضافه می‌شوند
+    document.addEventListener('click', function (e) {
+        // مدیریت تب‌های Bootstrap در محتوای دینامیک
+        if (e.target.matches('[data-bs-toggle="tab"], [data-bs-toggle="tab"] *')) {
+            const tabElement = e.target.closest('[data-bs-toggle="tab"]');
+            if (tabElement) {
+                const tab = new bootstrap.Tab(tabElement);
+                tab.show();
+            }
+        }
+    });
+
+    // مدیریت فرم‌ها در محتوای دینامیک
+    document.addEventListener('submit', function (e) {
+        if (e.target.tagName === 'FORM') {
+            e.preventDefault();
+            // مدیریت submit فرم‌های دینامیک
+            console.log('Form submitted:', e.target.id || e.target.name);
+        }
+    });
+}
+
+// ============================================================================
+// Updated Application Initialization
+// ============================================================================
+
+/**
+ * Initialize the application
+ */
+function initializeApp() {
+    console.log('Initializing application...');
+
+    // Setup global event listeners
+    setupGlobalEventListeners();
+    setupDynamicContentListeners();
+
+    // Show home section by default
+    const homeLink = document.querySelector('.nav-link[data-section="home"]');
+    if (homeLink) {
+        homeLink.classList.add('active');
+    }
+
+    // Preload important sections
+    setTimeout(preloadSections, 1000); // بعد از 1 ثانیه
+
+    console.log('Application initialized successfully');
+}
+
+// ============================================================================
+// Export new functions
+// ============================================================================
+
+window.loadSection = loadSection;
+window.unloadSection = unloadSection;
+window.clearSectionCache = clearSectionCache;
+window.preloadSections = preloadSections;

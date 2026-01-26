@@ -1,0 +1,170 @@
+<div id="cronsSection" class="content-section">
+    <div class="container-fluid mt-3 mb-3">
+        <div class="row">
+            <!-- لیست cron jobs -->
+            <div class="col-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>📅 لیست کرن جاب‌ها</span>
+                            <div>
+                                <button class="btn btn-sm btn-success me-2" onclick="CronUI.addCronJob()">
+                                    ➕ افزودن جدید
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="CronUI.loadCronJobs()">
+                                    🔄 بروزرسانی
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="50">#</th>
+                                        <th>زمان‌بندی</th>
+                                        <th>دستور</th>
+                                        <th>کاربر</th>
+                                        <th>وضعیت</th>
+                                        <th width="150">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cronJobsTable">
+                                    <!-- cron jobs اینجا لود می‌شوند -->
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">
+                                            در حال بارگذاری...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-3" id="cronJobsInfo">
+                            <!-- اطلاعات آماری -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- لاگ‌های cron -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <span>📝 لاگ‌های اخیر</span>
+                        <button class="btn btn-sm btn-outline-primary float-start" onclick="CronUI.loadCronLogs()">
+                            🔄 بروزرسانی لاگ‌ها
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="cronLogs" style="max-height: 300px; overflow-y: auto;">
+                            <div class="text-center text-muted">
+                                در حال بارگذاری لاگ‌ها...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- اطلاعات سیستم و عملیات -->
+            <div class="col-4">
+                <!-- وضعیت سیستم -->
+                <div class="card">
+                    <div class="card-header">⚙️ وضعیت سیستم Cron</div>
+                    <div class="card-body">
+                        <div id="cronSystemStatus">
+                            <div class="text-center text-muted">
+                                در حال بارگذاری وضعیت...
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-info" onclick="CronUI.loadSystemStatus()">
+                                🔄 بروزرسانی وضعیت
+                            </button>
+                            <button class="btn btn-warning" onclick="CronUI.restartCronService()">
+                                🔁 راه‌اندازی مجدد سرویس
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- افزودن cron job جدید -->
+                <div class="card mt-3">
+                    <div class="card-header">➕ افزودن کرن جاب جدید</div>
+                    <div class="card-body">
+                        <form id="addCronForm">
+                            <div class="mb-3">
+                                <label class="form-label">دستور</label>
+                                <input type="text" class="form-control" id="cronCommand"
+                                    placeholder="مثال: /path/to/script.sh" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">کاربر</label>
+                                <select class="form-select" id="cronUser">
+                                    <option value="root" selected>root</option>
+                                    <option value="www-data">www-data</option>
+                                    <option value="custom">سایر</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">وضعیت</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="cronEnabled" checked>
+                                    <label class="form-check-label" for="cronEnabled">
+                                        فعال
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    💾 ذخیره کرن جاب
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- زمان‌بندی سریع -->
+                <div class="card mt-3">
+                    <div class="card-header">⚡ زمان‌بندی‌های سریع</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-secondary" onclick="CronUI.setSchedule('* * * * *')">
+                                هر دقیقه
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="CronUI.setSchedule('0 * * * *')">
+                                هر ساعت
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="CronUI.setSchedule('0 0 * * *')">
+                                هر روز
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="CronUI.setSchedule('0 0 * * 0')">
+                                هر یکشنبه
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال ویرایش cron job -->
+    <div class="modal fade" id="editCronModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">ویرایش کرن جاب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="editCronModalBody">
+                    <!-- محتوای مودال -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

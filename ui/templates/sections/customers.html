@@ -1,0 +1,57 @@
+<div id="customersSection" class="content-section">
+    <div class="container-fluid mt-3 mb-3">
+        <div class="row">
+            <!-- تنظیمات -->
+            <div class="col-9">
+                <div class="card">
+                    <div class="card-header">⚙️ تنظیمات</div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs mb-3">
+                            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#modules">🧩 ماژول‌ها</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#domain">🌐 دامنه</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#backup">📁 بکاپ</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#test">🧪 تست</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#database">🗄️ پایگاه داده</button></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="modules"></div>
+                            <div class="tab-pane fade" id="domain"></div>
+                            <div class="tab-pane fade" id="backup"></div>
+                            <div class="tab-pane fade" id="test"></div>
+                            <div class="tab-pane fade" id="database"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- اجرا -->
+            <div class="col-3">
+                <div class="card">
+                    <div class="card-header">▶️ اجرا</div>
+                    <div class="card-body">
+                        <select id="customerSelect" class="form-select mb-2" onchange="updateCustomerState()"></select>
+                        <div class="mb-5 fw-bold mt-3 p-2 text-center bg-light rounded border border-secondary">
+                            <span class="fw-bold">وضعیت مشتری : </span>
+                            <span id="customerStateText" class="fw-bold ms-2"></span>
+                        </div>
+                        <hr>
+                        <div class="d-grid gap-2 mt-2">
+                            <button class="btn btn-primary mt-2 mb-2">🔄 بروزرسانی</button>
+                            <hr>
+                            <button class="btn btn-danger mt-2 mb-2" onclick="AnsibleUI.downCustomer()">⬇️ داون کردن  مشتری</button>
+                            <hr>
+                            <button class="btn btn-info mt-2 mb-2" onclick="AnsibleUI.backupCustomer()">🛡️ بکاپ  گرفتن</button>
+                            <hr>
+                            <button class="btn btn-warning mt-2" onclick="AnsibleUI.testFull()">🚀 تست کامل با دپلوی</button>
+                            <button class="btn btn-warning" onclick="AnsibleUI.testFailFast()">⚡ تست کامل با دپلوی و توقف با هر خطایی</button>
+                            <button class="btn btn-warning mb-2" onclick="AnsibleUI.testOnly()">🧫 فقط تست</button>
+                            <hr>
+                            <button class="btn btn-success mt-2 mb-2" onclick="AnsibleUI.saveCustomerVars()">💾 ذخیره در فایل inventory</button>
+                        </div>
+                        <div id="result" class="mt-2 text-success"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

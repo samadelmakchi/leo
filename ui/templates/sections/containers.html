@@ -1,0 +1,356 @@
+<div id="containersSection" class="content-section">
+    <div class="container-fluid mt-3 mb-3">
+        <div class="row">
+            <div class="col-9">
+                <div class="card">
+                    <div class="card-header">🐳 کانتینرهای Docker</div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="DockerContainersUI.refreshContainers()">
+                                    🔄 بروزرسانی لیست
+                                </button>
+                                <button class="btn btn-success" onclick="DockerContainersUI.showCreateContainerModal()">
+                                    ➕ ایجاد کانتینر جدید
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-warning" onclick="DockerContainersUI.pruneContainers()">
+                                    🧹 پاکسازی کانتینرهای متوقف شده
+                                </button>
+                                <button class="btn btn-info" onclick="DockerContainersUI.showQuickActions()">
+                                    ⚡ عملیات گروهی
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- فیلترها -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <select class="form-select" id="filterStatus" onchange="DockerContainersUI.filterContainers()">
+                                    <option value="">همه وضعیت‌ها</option>
+                                    <option value="running">در حال اجرا</option>
+                                    <option value="exited">متوقف شده</option>
+                                    <option value="paused">مکث شده</option>
+                                    <option value="restarting">در حال راه‌اندازی مجدد</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="searchContainer" placeholder="جستجوی کانتینر (نام، تصویر، وضعیت...)" onkeyup="DockerContainersUI.searchContainers()">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="sortContainers" onchange="DockerContainersUI.sortContainers()">
+                                    <option value="created_desc">جدیدترین</option>
+                                    <option value="created_asc">قدیمی‌ترین</option>
+                                    <option value="name">بر اساس نام</option>
+                                    <option value="status">بر اساس وضعیت</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <input type="checkbox" id="selectAllContainers" onclick="DockerContainersUI.toggleSelectAll()">
+                                        </th>
+                                        <th>نام</th>
+                                        <th>تصویر</th>
+                                        <th>وضعیت</th>
+                                        <th>پورت‌ها</th>
+                                        <th>شبکه‌ها</th>
+                                        <th>تاریخ ایجاد</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="containersTableBody">
+                                    <!-- داده‌های کانتینرها اینجا لود می‌شود -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <strong>📊 آمار:</strong>
+                                <span id="containersCount">0</span> کانتینر یافت شد.
+                                <span id="runningCount" class="badge bg-success ms-2">0 در حال اجرا</span>
+                                <span id="stoppedCount" class="badge bg-secondary ms-2">0 متوقف شده</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جزئیات کانتینر -->
+                <div class="card mt-3" id="containerDetailsCard" style="display: none;">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>🔍 جزئیات کانتینر</span>
+                            <button class="btn btn-sm btn-close" onclick="document.getElementById('containerDetailsCard').style.display='none'"></button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="containerDetailsTabs">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#containerInfoTab">اطلاعات</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#containerLogsTab">لاگ‌ها</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#containerStatsTab">آمار مصرف</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#containerExecTab">اجرای دستور</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content mt-3">
+                            <div class="tab-pane fade show active" id="containerInfoTab">
+                                <!-- اطلاعات کانتینر -->
+                            </div>
+                            <div class="tab-pane fade" id="containerLogsTab">
+                                <!-- لاگ‌های کانتینر -->
+                            </div>
+                            <div class="tab-pane fade" id="containerStatsTab">
+                                <!-- آمار مصرف -->
+                            </div>
+                            <div class="tab-pane fade" id="containerExecTab">
+                                <!-- اجرای دستور -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-3">
+                <!-- عملیات سریع -->
+                <div class="card">
+                    <div class="card-header">⚡ عملیات سریع</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>انتخاب کانتینر</h6>
+                            <select class="form-select" id="quickSelectContainer">
+                                <option value="">-- انتخاب کانتینر --</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button class="btn btn-success" onclick="DockerContainersUI.quickStart()">
+                                ▶️ شروع
+                            </button>
+                            <button class="btn btn-warning" onclick="DockerContainersUI.quickStop()">
+                                ⏸️ توقف
+                            </button>
+                            <button class="btn btn-info" onclick="DockerContainersUI.quickRestart()">
+                                🔄 راه‌اندازی مجدد
+                            </button>
+                            <button class="btn btn-secondary" onclick="DockerContainersUI.quickPause()">
+                                ⏸️ مکث
+                            </button>
+                            <button class="btn btn-danger" onclick="DockerContainersUI.quickRemove()">
+                                🗑️ حذف
+                            </button>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <h6>عملیات گروهی</h6>
+                            <div class="btn-group w-100" role="group">
+                                <button class="btn btn-outline-success" onclick="DockerContainersUI.batchStart()">
+                                    ▶️ همه
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="DockerContainersUI.batchStop()">
+                                    ⏸️ همه
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="DockerContainersUI.batchRemove()">
+                                    🗑️ انتخاب شده‌ها
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- آمار سیستم -->
+                <div class="card mt-3">
+                    <div class="card-header">📊 آمار سیستم</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>تعداد کل:</span>
+                                <span id="statsTotal">-</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>در حال اجرا:</span>
+                                <span id="statsRunning">-</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>متوقف شده:</span>
+                                <span id="statsStopped">-</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>تصاویر منحصر به فرد:</span>
+                                <span id="statsUniqueImages">-</span>
+                            </li>
+                        </ul>
+
+                        <button class="btn btn-info w-100 mt-3" onclick="DockerContainersUI.refreshSystemStats()">
+                            🔄 بروزرسانی آمار
+                        </button>
+                    </div>
+                </div>
+
+                <!-- میانبرها -->
+                <div class="card mt-3">
+                    <div class="card-header">🎯 میانبرها</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" onclick="DockerContainersUI.showAllLogs()">
+                                📝 مشاهده همه لاگ‌ها
+                            </button>
+                            <button class="btn btn-outline-secondary"
+                                onclick="DockerContainersUI.exportContainersList()">
+                                📋 خروجی لیست
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="DockerContainersUI.showHealthCheck()">
+                                🏥 بررسی سلامت
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال ایجاد کانتینر جدید -->
+<div class="modal fade" id="createContainerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ ایجاد کانتینر جدید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createContainerForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">نام کانتینر</label>
+                                <input type="text" class="form-control" id="containerName" placeholder="مثال: my-app" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">تصویر</label>
+                                <input type="text" class="form-control" id="containerImage" placeholder="مثال: nginx:latest" required>
+                                <div class="form-text">نام تصویر Docker</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">دستور اجرا</label>
+                                <input type="text" class="form-control" id="containerCommand" placeholder="اختیاری">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">شبکه</label>
+                                <select class="form-select" id="containerNetwork">
+                                    <option value="">پیش‌فرض</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">پورت‌ها</label>
+                                <textarea class="form-control" id="containerPorts" rows="3" placeholder='{"80/tcp": 8080, "443/tcp": 8443}'></textarea>
+                                <div class="form-text">فرمت JSON: {"پورت-کانتینر": "پورت-میزبان"}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">متغیرهای محیطی</label>
+                                <textarea class="form-control" id="containerEnv" rows="3" placeholder='{"NODE_ENV": "production", "DB_HOST": "localhost"}'></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">سیاست راه‌اندازی مجدد</label>
+                                <select class="form-select" id="containerRestartPolicy">
+                                    <option value="no">بدون</option>
+                                    <option value="always">همیشه</option>
+                                    <option value="unless-stopped" selected>مگر متوقف شده</option>
+                                    <option value="on-failure">در صورت خطا</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="containerAutoStart" checked>
+                            <label class="form-check-label">شروع خودکار بعد از ایجاد</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لغو</button>
+                <button type="button" class="btn btn-primary" onclick="DockerContainersUI.createContainer()">
+                    ایجاد کانتینر
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال عملیات گروهی -->
+<div class="modal fade" id="batchActionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚡ عملیات گروهی</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="batchActionMessage"></p>
+                <div class="progress mt-3" style="display: none;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="batchProgressBar" style="width: 0%"></div>
+                </div>
+                <div id="batchResults" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال اجرای دستور -->
+<div class="modal fade" id="execCommandModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">💻 اجرای دستور در کانتینر</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">کانتینر: <span id="execContainerName"></span></label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">دستور</label>
+                    <input type="text" class="form-control" id="execCommand" placeholder="مثال: ls -la /app">
+                </div>
+                <button class="btn btn-primary" onclick="DockerContainersUI.executeCommand()">
+                    اجرا
+                </button>
+                <div class="mt-3">
+                    <h6>خروجی:</h6>
+                    <pre class="bg-light p-3 rounded" id="execOutput" style="max-height: 300px; overflow-y: auto;"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>

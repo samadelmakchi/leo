@@ -1,3 +1,7 @@
+"""
+Load Test
+"""
+
 from locust import HttpUser, task, between, tag
 import os
 

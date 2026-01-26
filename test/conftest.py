@@ -1,3 +1,7 @@
+"""
+Conftest Test
+"""
+
 import pytest
 import os
 from datetime import datetime
@@ -14,7 +18,7 @@ def environment_setup():
 def pytest_configure(config):
     customer = os.getenv("CUSTOMER", "unknown")
     config._metadata.update({
-        "Project": "Calibri LEO",
+        "Project": "LEO",
         "Customer": customer,
         "Environment": "Production" if "test" not in customer.lower() else "Testing",
         "Deploy Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")

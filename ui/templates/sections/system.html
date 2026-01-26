@@ -1,0 +1,498 @@
+<div id="systemSection" class="content-section">
+    <div class="container-fluid mt-3 mb-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">🖥️ اطلاعات سیستم و منابع</div>
+                    <div class="card-body">
+
+                        <!-- تب‌ها -->
+                        <ul class="nav nav-tabs mb-3" id="systemTabs">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview">
+                                    📊 نمای کلی
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#hardware">
+                                    💻 سخت‌افزار
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#resources">
+                                    📈 منابع مصرفی
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#network">
+                                    🌐 شبکه
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#software">
+                                    🛠️ نرم‌افزار
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#processes">
+                                    ⚙️ پردازش‌ها
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- محتوای تب‌ها -->
+                        <div class="tab-content">
+
+                            <!-- تب 1: نمای کلی -->
+                            <div class="tab-pane fade show active" id="overview">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">🧠 CPU</div>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span>مصرف فعلی:</span>
+                                                    <span id="cpuUsage" class="fw-bold">--%</span>
+                                                </div>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div id="cpuProgress" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                                <small class="text-muted">Cores: <span id="cpuCores">--</span> | Threads: <span id="cpuThreads">--</span></small>
+                                            </div>
+                                        </div>
+
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">💾 RAM</div>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span>مصرف فعلی:</span>
+                                                    <span id="ramUsage" class="fw-bold">--/-- GB</span>
+                                                </div>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div id="ramProgress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                                <small class="text-muted">کل: <span id="ramTotal">--</span> | آزاد: <span id="ramFree">--</span></small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">💿 Disk</div>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span>مصرف فضای /:</span>
+                                                    <span id="diskUsage" class="fw-bold">--/-- GB</span>
+                                                </div>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div id="diskProgress" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                                                </div>
+                                                <small class="text-muted">کل: <span id="diskTotal">--</span> | آزاد: <span id="diskFree">--</span></small>
+                                            </div>
+                                        </div>
+
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">🌡️ System Uptime</div>
+                                            <div class="card-body">
+                                                <h4 id="uptime">-- روز -- ساعت</h4>
+                                                <small class="text-muted">زمان راه‌اندازی: <span id="bootTime">--</span></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Summary Cards -->
+                                <div class="row">
+                                    <div class="col-md-3 col-6">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h1 id="loadAvg">--</h1>
+                                                <p class="text-muted mb-0">Load Average</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-6">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h1 id="processCount">--</h1>
+                                                <p class="text-muted mb-0">پردازش‌ها</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-6">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h1 id="userCount">--</h1>
+                                                <p class="text-muted mb-0">کاربران</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-6">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h1 id="temperature">--°C</h1>
+                                                <p class="text-muted mb-0">دمای CPU</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- تب 2: سخت‌افزار -->
+                            <div class="tab-pane fade" id="hardware">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>🧠 پردازنده</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>مدل:</th>
+                                                <td id="cpuModel">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>فرکانس:</th>
+                                                <td id="cpuFreq">-- GHz</td>
+                                            </tr>
+                                            <tr>
+                                                <th>هسته‌ها:</th>
+                                                <td id="cpuCoresDetail">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>رشته‌ها:</th>
+                                                <td id="cpuThreadsDetail">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>آرشیتکتور:</th>
+                                                <td id="cpuArch">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>کش L1/L2/L3:</th>
+                                                <td id="cpuCache">--</td>
+                                            </tr>
+                                        </table>
+
+                                        <h5 class="mt-4">💾 حافظه</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>کل RAM:</th>
+                                                <td id="ramTotalDetail">-- GB</td>
+                                            </tr>
+                                            <tr>
+                                                <th>نوع:</th>
+                                                <td id="ramType">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>فرکانس:</th>
+                                                <td id="ramFreq">-- MHz</td>
+                                            </tr>
+                                            <tr>
+                                                <th>اسلات‌ها:</th>
+                                                <td id="ramSlots">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Swap:</th>
+                                                <td id="swapTotal">-- GB</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <h5>💿 دیسک‌ها</h5>
+                                        <div id="disksList">
+                                            <!-- دیسک‌ها اینجا لود می‌شوند -->
+                                            <div class="text-center text-muted">در حال بارگذاری...</div>
+                                        </div>
+
+                                        <h5 class="mt-4">🖥️ مادربرد</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>مدل:</th>
+                                                <td id="motherboard">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>BIOS/UEFI:</th>
+                                                <td id="bios">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>GPU:</th>
+                                                <td id="gpu">--</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- تب 3: منابع مصرفی (دینامیک) -->
+                            <div class="tab-pane fade" id="resources">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h5>🧠 مصرف CPU (60 ثانیه گذشته)</h5>
+                                        <canvas id="cpuChart" height="150"></canvas>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>💾 مصرف RAM (60 ثانیه گذشته)</h5>
+                                        <canvas id="ramChart" height="150"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>💿 Disk I/O (KB/s)</h5>
+                                        <canvas id="diskIoChart" height="150"></canvas>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>🌐 شبکه (KB/s)</h5>
+                                        <canvas id="networkChart" height="150"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="liveMonitoring" checked>
+                                        <label class="form-check-label" for="liveMonitoring">
+                                            📊 مانیتورینگ زنده (هر 3 ثانیه)
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="refreshResourceCharts()">
+                                        🔄 بروزرسانی نمودارها
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- تب 4: شبکه -->
+                            <div class="tab-pane fade" id="network">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>🌐 اطلاعات شبکه</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>Hostname:</th>
+                                                <td id="hostname">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>IP اصلی:</th>
+                                                <td id="primaryIp">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Gateway:</th>
+                                                <td id="gateway">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>DNS:</th>
+                                                <td id="dnsServers">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>MAC Address:</th>
+                                                <td id="macAddress">--</td>
+                                            </tr>
+                                        </table>
+
+                                        <h5 class="mt-4">📡 اتصالات فعال</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>پروتکل</th>
+                                                        <th>آدرس محلی</th>
+                                                        <th>آدرس خارجی</th>
+                                                        <th>وضعیت</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="connectionsTable">
+                                                    <!-- اتصالات شبکه -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <h5>🔌 اینترفیس‌های شبکه</h5>
+                                        <div id="networkInterfaces">
+                                            <!-- اینترفیس‌ها اینجا لود می‌شوند -->
+                                            <div class="text-center text-muted">در حال بارگذاری...</div>
+                                        </div>
+
+                                        <h5 class="mt-4">📊 ترافیک شبکه</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>کل دریافت:</th>
+                                                <td id="totalRx">-- GB</td>
+                                            </tr>
+                                            <tr>
+                                                <th>کل ارسال:</th>
+                                                <td id="totalTx">-- GB</td>
+                                            </tr>
+                                            <tr>
+                                                <th>سرعت دریافت:</th>
+                                                <td id="currentRx">-- KB/s</td>
+                                            </tr>
+                                            <tr>
+                                                <th>سرعت ارسال:</th>
+                                                <td id="currentTx">-- KB/s</td>
+                                            </tr>
+                                            <tr>
+                                                <th>بسته‌های دریافتی:</th>
+                                                <td id="packetsRx">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>بسته‌های ارسالی:</th>
+                                                <td id="packetsTx">--</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- تب 5: نرم‌افزار -->
+                            <div class="tab-pane fade" id="software">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>🖥️ سیستم عامل</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>نام:</th>
+                                                <td id="osName">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>نسخه:</th>
+                                                <td id="osVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>کدنام:</th>
+                                                <td id="osCodename">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>بیت:</th>
+                                                <td id="osArch">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Kernel:</th>
+                                                <td id="kernel">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Desktop:</th>
+                                                <td id="desktop">--</td>
+                                            </tr>
+                                        </table>
+
+                                        <h5 class="mt-4">🐳 Docker</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>نسخه:</th>
+                                                <td id="dockerVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>API:</th>
+                                                <td id="dockerApi">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>حافظه Cache:</th>
+                                                <td id="dockerStorage">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Drivers:</th>
+                                                <td id="dockerDrivers">--</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <h5>📦 سرویس‌ها</h5>
+                                        <div id="servicesStatus">
+                                            <!-- وضعیت سرویس‌ها -->
+                                            <div class="text-center text-muted">در حال بارگذاری...</div>
+                                        </div>
+
+                                        <h5 class="mt-4">🗄️ دیتابیس‌ها</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>MySQL:</th>
+                                                <td id="mysqlVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>PostgreSQL:</th>
+                                                <td id="postgresVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Redis:</th>
+                                                <td id="redisVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>MongoDB:</th>
+                                                <td id="mongodbVersion">--</td>
+                                            </tr>
+                                        </table>
+
+                                        <h5 class="mt-4">🌐 وب سرور</h5>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>Nginx:</th>
+                                                <td id="nginxVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Apache:</th>
+                                                <td id="apacheVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>PHP:</th>
+                                                <td id="phpVersion">--</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Python:</th>
+                                                <td id="pythonVersion">--</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- تب 6: پردازش‌ها -->
+                            <div class="tab-pane fade" id="processes">
+                                <div class="mb-3">
+                                    <div class="input-group" style="max-width: 300px;">
+                                        <input type="text" id="processSearch" class="form-control" placeholder="جستجوی پردازش...">
+                                        <button class="btn btn-outline-secondary" onclick="searchProcesses()">🔍</button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>PID</th>
+                                                <th>نام</th>
+                                                <th>کاربر</th>
+                                                <th>CPU %</th>
+                                                <th>RAM %</th>
+                                                <th>حافظه</th>
+                                                <th>وضعیت</th>
+                                                <th>زمان اجرا</th>
+                                                <th>عملیات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="processesTable">
+                                            <!-- لیست پردازش‌ها -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-2">
+                                    <div>
+                                        <span id="processCountDisplay">0</span> پردازش نمایش داده می‌شود
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="refreshProcesses()">
+                                            🔄 بروزرسانی
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="killSelectedProcess()">
+                                            ⛔ پایان پردازش
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

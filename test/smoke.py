@@ -1,3 +1,7 @@
+"""
+Smoke Test
+"""
+
 import pytest
 from .base import BaseTest
 
