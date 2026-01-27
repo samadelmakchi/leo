@@ -105,7 +105,7 @@ const DockerContainersUI = (function () {
                            value="${container.id}" 
                            onclick="DockerContainersUI.toggleContainerSelection('${container.id}', this)">
                 </td>
-                <td>
+                <td class="ltr">
                     <strong>${container.name}</strong>
                     ${container.labels && Object.keys(container.labels).length > 0 ?
                     '<span class="badge bg-secondary ms-1" title="دارای برچسب">🏷️</span>' : ''
@@ -141,7 +141,7 @@ const DockerContainersUI = (function () {
                             <button class="btn btn-outline-warning"
                                     onclick="DockerContainersUI.stopContainer('${container.id}')"
                                     title="توقف">
-                                ⏸️
+                                ⏹️
                             </button>
                             <button class="btn btn-outline-secondary"
                                     onclick="DockerContainersUI.pauseContainer('${container.id}')"
@@ -258,7 +258,7 @@ const DockerContainersUI = (function () {
                 <button class="btn btn-primary" onclick="DockerContainersUI.loadContainerLogs('${container.id}')">
                     بارگذاری لاگ‌ها
                 </button>
-                <div class="mt-3" id="containerLogsContent"></div>
+                <div class="mt-3 w-100 ltr" id="containerLogsContent"></div>
             </div>
         `;
 
@@ -289,18 +289,18 @@ const DockerContainersUI = (function () {
             <div class="row">
                 <div class="col-md-6">
                     <h6>اطلاعات پایه</h6>
-                    <table class="table table-sm">
-                        <tr><th>نام:</th><td>${container.name}</td></tr>
+                    <table class="table table-sm ltr">
+                        <tr><th>Name:</th><td>${container.name}</td></tr>
                         <tr><th>ID:</th><td><code>${container.id.substring(0, 12)}</code></td></tr>
-                        <tr><th>تصویر:</th><td>${config.Image || '-'}</td></tr>
-                        <tr><th>وضعیت:</th><td>${attrs.State?.Status || '-'}</td></tr>
-                        <tr><th>تاریخ ایجاد:</th><td>${DockerContainersModule._formatDate(attrs.Created || '')}</td></tr>
-                        <tr><th>دستور:</th><td><code>${config.Cmd ? config.Cmd.join(' ') : '-'}</code></td></tr>
+                        <tr><th>Image:</th><td>${config.Image || '-'}</td></tr>
+                        <tr><th>State:</th><td>${attrs.State?.Status || '-'}</td></tr>
+                        <tr><th>Crate Date:</th><td>${DockerContainersModule._formatDate(attrs.Created || '')}</td></tr>
+                        <tr><th>Commend:</th><td><code>${config.Cmd ? config.Cmd.join(' ') : '-'}</code></td></tr>
                     </table>
                 </div>
                 <div class="col-md-6">
                     <h6>تنظیمات</h6>
-                    <table class="table table-sm">
+                    <table class="table table-sm ltr">
                         <tr><th>Restart Policy:</th><td>${hostConfig.RestartPolicy?.Name || 'no'}</td></tr>
                         <tr><th>Network Mode:</th><td>${hostConfig.NetworkMode || 'default'}</td></tr>
                         <tr><th>IP Address:</th><td>${networkSettings.IPAddress || '-'}</td></tr>
@@ -314,7 +314,7 @@ const DockerContainersUI = (function () {
                 <div class="col-12">
                     <h6>متغیرهای محیطی</h6>
                     ${config.Env && config.Env.length > 0 ? `
-                        <div class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto;">
+                        <div class="bg-light p-2 rounded info-box ltr">
                             ${config.Env.map(env => `<div><code>${env}</code></div>`).join('')}
                         </div>
                     ` : '<p class="text-muted">بدون متغیر محیطی</p>'}
@@ -325,7 +325,7 @@ const DockerContainersUI = (function () {
                 <div class="col-md-6">
                     <h6>پورت‌ها</h6>
                     ${attrs.NetworkSettings?.Ports ? `
-                        <div class="bg-light p-2 rounded">
+                        <div class="bg-light p-2 rounded info-box ltr">
                             ${Object.entries(attrs.NetworkSettings.Ports).map(([port, mapping]) => `
                                 <div><strong>${port}:</strong> ${mapping ? mapping[0]?.HostPort + ':' + mapping[0]?.HostIp : 'Not published'}</div>
                             `).join('')}
@@ -335,7 +335,7 @@ const DockerContainersUI = (function () {
                 <div class="col-md-6">
                     <h6>Mounts</h6>
                     ${attrs.Mounts && attrs.Mounts.length > 0 ? `
-                        <div class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto;">
+                        <div class="bg-light p-2 rounded info-box ltr">
                             ${attrs.Mounts.map(mount => `
                                 <div>
                                     <strong>${mount.Source || '-'}</strong> → ${mount.Destination || '-'}
@@ -355,7 +355,7 @@ const DockerContainersUI = (function () {
     function getContainerExecHTML(container) {
         return `
             <div class="mb-3">
-                <label class="form-label">اجرای دستور در کانتینر <strong>${container.name}</strong></label>
+                <label class="d-block mb-3">اجرای دستور در کانتینر <strong>${container.name}</strong></label>
                 <div class="input-group">
                     <input type="text" class="form-control" id="execCommandInput" 
                            placeholder="مثال: ls -la /app">
@@ -367,7 +367,7 @@ const DockerContainersUI = (function () {
             </div>
             
             <div class="mt-3">
-                <h6>دستورات پیشنهادی</h6>
+                <h6 class="mx-2">دستورات پیشنهادی</h6>
                 <div class="btn-group btn-group-sm mb-2">
                     <button class="btn btn-outline-secondary" onclick="document.getElementById('execCommandInput').value='ls -la'">
                         ls -la
@@ -386,8 +386,7 @@ const DockerContainersUI = (function () {
             
             <div class="mt-3">
                 <h6>خروجی</h6>
-                <pre class="bg-light p-3 rounded" id="execCommandOutput" 
-                     style="max-height: 300px; overflow-y: auto; min-height: 100px;"></pre>
+                <pre class="bg-light p-3 rounded" id="execCommandOutput"></pre>
             </div>
         `;
     }

@@ -313,9 +313,9 @@ const DockerModule = (function () {
                         </div>
                         <div class="modal-body">
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <h6>اطلاعات پایه</h6>
-                                    <table class="table table-sm">
+                                    <table class="table table-sm ltr">
                                         <tr>
                                             <th>ID:</th>
                                             <td><code>${image.id}</code></td>
@@ -329,18 +329,20 @@ const DockerModule = (function () {
                                             <td><span class="badge bg-info">${image.tag}</span></td>
                                         </tr>
                                         <tr>
-                                            <th>سایز:</th>
+                                            <th>Size:</th>
                                             <td>${image.size}</td>
                                         </tr>
                                         <tr>
-                                            <th>تاریخ ایجاد:</th>
+                                            <th>Create Date:</th>
                                             <td>${_formatDate(image.created)}</td>
                                         </tr>
                                     </table>
                                 </div>
-                                <div class="col-md-6">
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
                                     <h6>اطلاعات فنی</h6>
-                                    <table class="table table-sm">
+                                    <table class="table table-sm ltr">
                                         <tr>
                                             <th>Full ID:</th>
                                             <td><small><code>${image.full_id}</code></small></td>

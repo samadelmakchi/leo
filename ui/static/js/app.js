@@ -1,8 +1,70 @@
-/**
- * Main JavaScript file for the application
- */
+// ============================================================================
+// Menu
+// ============================================================================
 
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const wrapper = document.getElementById("contentWrapper");
+
+    sidebar.classList.toggle("open");
+    wrapper.classList.toggle("shifted");
+}
+
+// ============================================================================
+// Toast
+// ============================================================================
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 5000);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    // مدیریت منوی ناوبری
+    const navContainer = document.getElementById('sidebar');
+
+    if (navContainer) {
+        navContainer.addEventListener('click', function (e) {
+            const link = e.target.closest('.nav-link');
+
+            if (link && link.hasAttribute('data-section')) {
+                e.preventDefault();
+
+                const sectionId = link.getAttribute('data-section');
+                const sectionTitle = link.getAttribute('data-title');
+
+                showSection(sectionId, sectionTitle);
+                toggleSidebar();
+                updateActiveLink(link);
+            }
+        });
+    }
+});
+
+function updateActiveLink(activeLink) {
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    activeLink.classList.add('active');
+}
+
+// ============================================================================
 // Global variables
+// ============================================================================
+
 let currentSection = 'home';
 let loadedSections = new Set(['home']); // بخش‌های لود شده
 
@@ -10,9 +72,6 @@ let loadedSections = new Set(['home']); // بخش‌های لود شده
 // Dynamic Content Loading
 // ============================================================================
 
-/**
- * Load a section dynamically
- */
 async function loadSection(sectionId) {
     // اگر قبلاً لود شده، فقط نمایش بده
     if (loadedSections.has(sectionId)) {
@@ -23,8 +82,8 @@ async function loadSection(sectionId) {
     try {
         showToast(`در حال بارگذاری بخش ${sectionId}...`, 'info');
 
-        const response = await fetch(`/section/${sectionId}`);
-
+        const response = await fetch(`section/${sectionId}`);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -73,9 +132,6 @@ async function loadSection(sectionId) {
     }
 }
 
-/**
- * Unload a section (optional - برای بهینه‌سازی)
- */
 function unloadSection(sectionId) {
     if (sectionId === 'home') return; // صفحه اصلی همیشه می‌ماند
 
@@ -92,9 +148,6 @@ function unloadSection(sectionId) {
 // Updated showSection function
 // ============================================================================
 
-/**
- * Show a specific section
- */
 function showSection(sectionId, title) {
     // مخفی کردن تمام بخش‌ها
     document.querySelectorAll('.content-section').forEach(section => {
@@ -135,9 +188,6 @@ function showSection(sectionId, title) {
 // Updated initializeSection function
 // ============================================================================
 
-/**
- * Initialize a specific section
- */
 function initializeSection(sectionId) {
     console.log(`Initializing section: ${sectionId}`);
 
@@ -237,9 +287,6 @@ function initializeSection(sectionId) {
 // Cache Management
 // ============================================================================
 
-/**
- * Clear all cached sections except home
- */
 function clearSectionCache() {
     const sectionsToRemove = [];
 
@@ -265,9 +312,6 @@ function clearSectionCache() {
     showToast('کش بخش‌ها پاک شد', 'info');
 }
 
-/**
- * Preload important sections
- */
 function preloadSections() {
     const importantSections = ['customers', 'images']; // بخش‌های مهم
 
@@ -286,9 +330,6 @@ function preloadSections() {
 // Event Listeners for dynamic content
 // ============================================================================
 
-/**
- * Setup event listeners for dynamic content
- */
 function setupDynamicContentListeners() {
     // Event delegation برای المنت‌هایی که بعداً اضافه می‌شوند
     document.addEventListener('click', function (e) {
@@ -316,9 +357,6 @@ function setupDynamicContentListeners() {
 // Updated Application Initialization
 // ============================================================================
 
-/**
- * Initialize the application
- */
 function initializeApp() {
     console.log('Initializing application...');
 

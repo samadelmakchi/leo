@@ -88,9 +88,9 @@ const DockerNetworksUI = (function () {
             const row = document.createElement('tr');
 
             // تعیین کلاس بر اساس نوع درایور
-            let driverClass = 'bg-light';
-            if (network.driver === 'bridge') driverClass = 'bg-info bg-opacity-10';
-            if (network.driver === 'overlay') driverClass = 'bg-warning bg-opacity-10';
+            let driverClass = 'bg-warning';
+            if (network.driver === 'bridge') driverClass = 'bg-info bg-opacity-5';
+            if (network.driver === 'overlay') driverClass = 'bg-warning bg-opacity-5';
 
             // تعیین بج وضعیت
             let statusBadge = '';
@@ -197,13 +197,13 @@ const DockerNetworksUI = (function () {
 
                 if (detailsCard && detailsContent) {
                     detailsContent.innerHTML = `
-                        <div class="row">
+                        <div class="row ltr">
                             <div class="col-md-6">
                                 <h6>اطلاعات پایه</h6>
                                 <table class="table table-sm">
-                                    <tr><th>نام:</th><td>${network.name}</td></tr>
+                                    <tr><th>Name:</th><td>${network.name}</td></tr>
                                     <tr><th>ID:</th><td><code>${network.id}</code></td></tr>
-                                    <tr><th>درایور:</th><td>${network.attrs.Driver || 'bridge'}</td></tr>
+                                    <tr><th>Driver:</th><td>${network.attrs.Driver || 'bridge'}</td></tr>
                                     <tr><th>Scope:</th><td>${network.attrs.Scope || 'local'}</td></tr>
                                     <tr><th>Internal:</th><td>${network.attrs.Internal ? 'بله' : 'خیر'}</td></tr>
                                     <tr><th>Attachable:</th><td>${network.attrs.Attachable ? 'بله' : 'خیر'}</td></tr>
@@ -258,7 +258,7 @@ ${JSON.stringify(network.attrs.IPAM, null, 2)}
                                 </div>
                                 <div class="modal-body">
                                     ${data.containers_count > 0 ? `
-                                        <div class="table-responsive">
+                                        <div class="table-responsive ltr">
                                             <table class="table table-sm">
                                                 <thead>
                                                     <tr>

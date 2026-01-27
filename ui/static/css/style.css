@@ -91,6 +91,14 @@ h3 {
     font-weight: 500;
 }
 
+.rtl{
+    direction: rtl;
+}
+
+.ltr{
+    direction: ltr;
+}
+
 body {
     font-family: 'IranSans', sans-serif;
     background-color: #f4f6f8;
@@ -140,13 +148,26 @@ body {
     width: 350px;
 }
 
-.tab-pane div{
+/* .tab-pane div{
     display: flex;
     align-items: center;
-}
+    flex-wrap: wrap;
+} */
 
 .form-control{
     text-align: left;
+}
+
+#execCommandOutput{
+    max-height: 300px;
+    overflow-y: auto;
+    min-height: 100px;
+    width: 100%;
+}
+
+.info-box{
+    max-height: 150px;
+    overflow-y: auto
 }
 
 /* هدر */

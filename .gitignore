@@ -5,3 +5,4 @@ sql/*
 
 
 ui/venv
+ui/__pycache__
