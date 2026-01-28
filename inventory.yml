@@ -42,8 +42,12 @@ all:
   vars:
     ansible_connection: local
     ansible_user: root
-    project_path: /home/calibri
+    project_path: /home/calibri/Downloads/calibri
     customer_state: "up"
+
+    # پورت‌های پیش‌فرض
+    customer_websocket_ports: 6001
+    customer_gateway_ports: 80
 
     # subdomain پیش‌فرض
     customer_subdomain_gateway: "calibri"

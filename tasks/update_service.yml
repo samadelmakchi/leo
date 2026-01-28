@@ -74,6 +74,24 @@
   when: project.name == "gateway"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+- name: Set project variable
+  set_fact:
+    project: "{{ current_project | default(item) }}"
+  tags: always
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+- name: Debug host variables
+  debug:
+    var: hostvars[inventory_hostname]
+  tags: debug
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+- name: Get customer_containers from inventory
+  set_fact:
+    customer_containers: "{{ lookup('vars', 'customer_containers', default=inventory_hostname) }}"
+  tags: always
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 - name: Deploy docker-compose.yml
   ansible.builtin.template:
     src: >-
