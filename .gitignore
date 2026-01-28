@@ -3,6 +3,6 @@ id_rsa
 sql/*
 !sql/default_gateway.sql
 
-
+venv
 ui/venv
 ui/__pycache__
