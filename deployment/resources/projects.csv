@@ -1,0 +1,6 @@
+name,folder,repo,branch_var,tag_var,update,force
+gateway,gateway,git@github.com:nasserman/calibri.git,customer_gateway_git_branches,customer_gateway_git_tags,{{ customer_gateway_update }},true
+portal,portal,git@github.com:nasserman/calibri-portal.git,customer_portal_git_branches,customer_portal_git_tags,{{ customer_portal_update }},true
+portal-frontend,portal-frontend,git@github.com:nasserman/calibri-portal-frontend.git,customer_portal_frontend_git_branches,customer_portal_frontend_git_tags,{{ customer_portal_frontend_update }},true
+lms,lms,git@github.com:nasserman/calibri-lms.git,customer_lms_git_branches,customer_lms_git_tags,{{ customer_lms_update }},true
+file,file,git@github.com:nasserman/calibri-file-storage.git,customer_file_git_branches,customer_file_git_tags,{{ customer_file_update }},true

@@ -1,7 +1,7 @@
-id_rsa
+deployment/resources/ssh/id_rsa
 
-sql/*
-!sql/default_gateway.sql
+deployment/resources/sql/*
+!deployment/resources/sql/default_gateway.sql
 
 venv
 ui/venv
