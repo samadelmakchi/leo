@@ -51,7 +51,7 @@
                 <div class="card mt-3">
                     <div class="card-header">
                         <span>📝 لاگ‌های اخیر</span>
-                        <button class="btn btn-sm btn-outline-primary float-start" onclick="CronUI.loadCronLogs()">
+                        <button class="btn btn-sm btn-outline-primary float-end" onclick="CronUI.loadCronLogs()">
                             🔄 بروزرسانی لاگ‌ها
                         </button>
                     </div>
@@ -87,45 +87,6 @@
                                 🔁 راه‌اندازی مجدد سرویس
                             </button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- افزودن cron job جدید -->
-                <div class="card mt-3">
-                    <div class="card-header">➕ افزودن کرن جاب جدید</div>
-                    <div class="card-body">
-                        <form id="addCronForm">
-                            <div class="mb-3">
-                                <label class="form-label">دستور</label>
-                                <input type="text" class="form-control" id="cronCommand"
-                                    placeholder="مثال: /path/to/script.sh" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">کاربر</label>
-                                <select class="form-select" id="cronUser">
-                                    <option value="root" selected>root</option>
-                                    <option value="www-data">www-data</option>
-                                    <option value="custom">سایر</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">وضعیت</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="cronEnabled" checked>
-                                    <label class="form-check-label" for="cronEnabled">
-                                        فعال
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-success">
-                                    💾 ذخیره کرن جاب
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
 

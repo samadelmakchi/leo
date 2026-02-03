@@ -1,9 +1,9 @@
 # LEO - سیستم استقرار خودکار پروژه‌های کالیبری
 
-یک سیستم CI/CD کاملاً هوشمند و انعطاف‌پذیر برای استقرار، مدیریت و بکاپ‌گیری خودکار از پروژه‌های **Gateway + Portal + Portal-Frontend** با Docker Compose و Ansible.
+یک سیستم CI/CD کاملاً هوشمند و انعطاف‌پذیر برای استقرار، مدیریت و بکاپ‌گیری خودکار از پروژه‌های **Gateway + Portal + LMS + File** با Docker Compose و Ansible.
 
 ### ویژگی‌های کلیدی
-- استقرار انتخابی سرویس‌ها (فقط gateway، فقط frontend و ...)
+- استقرار انتخابی سرویس‌ها (فقط gateway، فقط portal و ...)
 - حالت کامل `up` / `down` برای هر مشتری (حذف کامل کانتینرها + کرون جاب‌ها)
 - بکاپ‌گیری هوشمند از فایل‌ها و دیتابیس‌ها با قابلیت فعال/غیرفعال کردن
 - مدیریت خودکار کرون جاب‌های بکاپ بر اساس تنظیمات inventory
@@ -125,7 +125,6 @@ ansible-playbook -i inventory.yml playbook.yml --limit simnad --tags backup
 ```bash
 customer_gateway_update: true
 customer_portal_update: false
-customer_portal_frontend_update: true
 ```
 
 ---
@@ -138,7 +137,6 @@ customer_state: "up"               # یا "down"
 # کنترل آپدیت سرویس‌ها
 customer_gateway_update: true
 customer_portal_update: true
-customer_portal_frontend_update: true
 
 # کنترل بکاپ
 customer_backup_enabled: true                     # فعال/غیرفعال کردن بکاپ
@@ -154,7 +152,6 @@ customer_backup_cron_databases: "30 1,9,17 * * *" # هر روز 01:30، 09:30، 
 ```bash
 sql/
 ├── simnad_gateway.sql
-├── simnad_portal.sql
 ├── simnad_lms.sql
 ├── simnad_file.sql
 ├── simnad_gateway_uploads.zip
@@ -192,8 +189,7 @@ sql/
 | سرویس           | پورت پیش‌فرض | مثال ساب‌دامین              | توضیحات               |
 | --------------- | ----------- | -------------------------- | --------------------- |
 | Gateway         | 8061+       | `calibri.simnad.com`       | پنل مدیریت اصلی       |
-| Portal Backend  | 7061+       | `backendportal.simnad.com` | بک‌اند Symfony         |
-| Portal Frontend | 6061+       | `portal.simnad.com`        | فرانت‌اند React/Vue    |
+| Portal          | 6061+       | `portal.simnad.com`        | فرانت‌اند Vue          |
 | LMS             | 9061+       | `lms.simnad.com`           | سیستم مدیریت یادگیری  |
 | File Storage    | 10061+      | `files.simnad.com`         | فایل‌منیجر و ذخیره‌سازی |
 
@@ -223,3 +219,4 @@ python app.py
 pip install -r requirements.txt
 
 **ساخته شده با 🖤 توسط صمد المکچی**  
+

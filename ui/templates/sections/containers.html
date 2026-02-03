@@ -18,9 +18,6 @@
                                 <button class="btn btn-warning" onclick="DockerContainersUI.pruneContainers()">
                                     🧹 پاکسازی کانتینرهای متوقف شده
                                 </button>
-                                <button class="btn btn-info" onclick="DockerContainersUI.showQuickActions()">
-                                    ⚡ عملیات گروهی
-                                </button>
                             </div>
                         </div>
 
@@ -74,8 +71,12 @@
                             <div class="alert alert-info">
                                 <strong>📊 آمار:</strong>
                                 <span id="containersCount">0</span> کانتینر یافت شد.
-                                <span id="runningCount" class="badge bg-success ms-2">0 در حال اجرا</span>
-                                <span id="stoppedCount" class="badge bg-secondary ms-2">0 متوقف شده</span>
+                                <div id="allStatusStats" class="mt-2">
+                                    <span id="runningCount" class="badge bg-success ms-2">0 در حال اجرا</span>
+                                    <span id="stoppedCount" class="badge bg-secondary ms-2">0 متوقف شده</span>
+                                    <span id="pausedCount" class="badge bg-warning ms-2">0 مکث شده</span>
+                                    <span id="restartingCount" class="badge bg-info ms-2">0 در حال راه‌اندازی مجدد</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -140,7 +141,7 @@
                                 ▶️ شروع
                             </button>
                             <button class="btn btn-warning" onclick="DockerContainersUI.quickStop()">
-                                ⏸️ توقف
+                                ⏹️ توقف
                             </button>
                             <button class="btn btn-info" onclick="DockerContainersUI.quickRestart()">
                                 🔄 راه‌اندازی مجدد
@@ -158,14 +159,14 @@
                         <div class="mb-3">
                             <h6>عملیات گروهی</h6>
                             <div class="btn-group w-100" role="group">
-                                <button class="btn btn-outline-success" onclick="DockerContainersUI.batchStart()">
-                                    ▶️ همه
+                                <button class="btn btn-outline-dark" onclick="DockerContainersUI.batchStart()">
+                                    ▶️ شروع همه
                                 </button>
-                                <button class="btn btn-outline-warning" onclick="DockerContainersUI.batchStop()">
-                                    ⏸️ همه
+                                <button class="btn btn-outline-dark" onclick="DockerContainersUI.batchStop()">
+                                    ⏹️ توقف همه
                                 </button>
-                                <button class="btn btn-outline-danger" onclick="DockerContainersUI.batchRemove()">
-                                    🗑️ انتخاب شده‌ها
+                                <button class="btn btn-outline-dark" onclick="DockerContainersUI.batchRemove()">
+                                    🗑️ حذف انتخاب شده‌ها
                                 </button>
                             </div>
                         </div>
@@ -188,6 +189,14 @@
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>متوقف شده:</span>
                                 <span id="statsStopped">-</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>مکث شده:</span>
+                                <span id="statsPaused">-</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>در حال راه‌اندازی مجدد:</span>
+                                <span id="statsRestarting">-</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>تصاویر منحصر به فرد:</span>

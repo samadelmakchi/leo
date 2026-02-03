@@ -6,7 +6,7 @@ const AnsibleModule = (function () {
     // متغیرهای داخلی ماژول
     let inventoryData = {};
     let currentCustomer = '';
-    let modulesList = ["gateway", "portal", "portal_frontend", "lms", "file"];
+    let modulesList = ["gateway", "portal", "lms", "file"];
 
     // ============================================================================
     // Public Functions - Inventory

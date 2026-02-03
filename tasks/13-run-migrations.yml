@@ -22,34 +22,6 @@
       until: _compose is succeeded
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Portal (Symfony)
-    - name: Get portal container IDs
-      command: docker ps --filter "name={{ customer_containers }}-portal" --format "{{ '{{.Names}}' }}"
-      register: portal_containers
-      changed_when: false
-      when: customer_portal_update | default(false) | bool
-
-    - name: Composer install (portal)
-      community.docker.docker_container_exec:
-        container: "{{ item }}"
-        command: composer install --no-dev --optimize-autoloader --no-interaction
-      loop: "{{ portal_containers.stdout_lines }}"
-      async: 300
-      poll: 10
-      ignore_errors: true
-      when: customer_portal_update | default(false) | bool
-
-    - name: Doctrine migrations (portal)
-      community.docker.docker_container_exec:
-        container: "{{ item }}"
-        command: php bin/console doctrine:migrations:migrate --no-interaction --env=prod
-      loop: "{{ portal_containers.stdout_lines }}"
-      async: 300
-      poll: 10
-      ignore_errors: true
-      when: customer_portal_update | default(false) | bool
-
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Gateway (CodeIgniter)
     - name: Get gateway container IDs
       command: docker ps --filter "name={{ customer_containers }}-gateway" --format "{{ '{{.Names}}' }}"

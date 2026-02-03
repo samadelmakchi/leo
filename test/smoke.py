@@ -11,7 +11,7 @@ class TestSmoke(BaseTest):
         assert r.status_code == 200
         assert "Calibri" in r.text or "login" in r.text.lower()
 
-    def test_portal_frontend_loads(self):
+    def test_portal_loads(self):
         r = self.session.get(self.portal, timeout=15)
         assert r.status_code == 200
         assert any(x in r.text.lower() for x in ["portal", "dashboard", "react"])

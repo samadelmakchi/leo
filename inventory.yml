@@ -25,7 +25,6 @@ all:
         customer_containers: "test"
         customer_subdomain_gateway: "testcalibri"
         customer_subdomain_portal: "testportal"
-        customer_subdomain_backendportal: "testbackendportal"
         customer_subdomain_lms: "testlms"
         customer_subdomain_file: "testfile"
         customer_domain: "pardazeshafza.com"
@@ -52,27 +51,23 @@ all:
     # subdomain پیش‌فرض
     customer_subdomain_gateway: "calibri"
     customer_subdomain_portal: "portal"
-    customer_subdomain_backendportal: "backendportal"
     customer_subdomain_lms: "lms"
     customer_subdomain_file: "file"
 
     # Git branch/tag پیش‌فرض
     customer_gateway_git_branches: "master"
-    customer_portal_git_branches: "master"
-    customer_portal_frontend_git_branches: "dev"
+    customer_portal_git_branches: "dev"
     customer_lms_git_branches: "dev"
     customer_file_git_branches: "smd"
     
     customer_gateway_git_tags: ""
     customer_portal_git_tags: ""
-    customer_portal_frontend_git_tags: ""
     customer_lms_git_tags: ""
     customer_file_git_tags: ""
 
     # کنترل آپدیت
     customer_gateway_update: true
     customer_portal_update: true
-    customer_portal_frontend_update: true
     customer_lms_update: true
     customer_file_update: true
 
@@ -89,11 +84,6 @@ all:
     customer_url: "185.255.89.160"
 
     # دیتابیس‌ها (در محیط تست همه پسورد 1234 هست)
-    portal_mysql_root_password: "1234"
-    portal_mysql_password: "1234"
-    portal_mysql_user: "root"
-    portal_mysql_db_name: "calibri_portal"
-
     gateway_mysql_root_password: "1234"
     gateway_mysql_password: "1234"
     gateway_mysql_user: "root"

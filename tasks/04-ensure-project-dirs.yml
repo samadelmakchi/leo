@@ -8,7 +8,6 @@
   loop:
     - { folder: gateway }
     - { folder: portal }
-    - { folder: portal-frontend }
     - { folder: file }
     - { folder: lms }
   when: customer_state == "up"

@@ -16,10 +16,17 @@ const CronModule = (function () {
      */
     function getCronJobs() {
         return new Promise((resolve, reject) => {
-            fetch('/api/cron/jobs')
+            fetch('/api/cron/jobs/real')
+                .then(response => {
+                    if (!response.ok) {
+                        return fetch('/api/cron/jobs/test');
+                    }
+                    return response;
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
+                        // ذخیره jobs در متغیر داخلی
                         currentJobs = data.jobs;
                         resolve(data);
                     } else {
@@ -38,6 +45,14 @@ const CronModule = (function () {
      */
     function getCronJob(jobId) {
         return new Promise((resolve, reject) => {
+            // اول از لیست داخلی جستجو کن
+            const job = currentJobs.find(j => j.id == jobId);
+            if (job) {
+                resolve({ status: 'success', job: job });
+                return;
+            }
+
+            // اگر پیدا نکردی، از API بگیر
             fetch(`/api/cron/jobs/${jobId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -179,23 +194,57 @@ const CronModule = (function () {
      * دریافت لاگ‌های cron
      */
     function getCronLogs(limit = 50) {
-        // در این نسخه ساده، از لاگ سیستم استفاده می‌کنیم
-        // در نسخه پیشرفته‌تر می‌توانید endpoint جداگانه بسازید
         return new Promise((resolve, reject) => {
-            // شبیه‌سازی لاگ‌ها
-            const logs = [
-                { timestamp: new Date().toISOString(), message: "Cron job 'backup' executed successfully", type: "success" },
-                { timestamp: new Date(Date.now() - 3600000).toISOString(), message: "Cron job 'cleanup' started", type: "info" },
-                { timestamp: new Date(Date.now() - 7200000).toISOString(), message: "Cron daemon restarted", type: "warning" },
-                { timestamp: new Date(Date.now() - 10800000).toISOString(), message: "Error in cron job 'report': Permission denied", type: "error" }
-            ];
+            fetch('/api/cron/logs')
+                .then(response => {
+                    // اول مطمئن شو response معتبر است
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
-            resolve({
-                status: 'success',
-                logs: logs.slice(0, limit)
-            });
+                    // بررسی کن که content-type درست باشد
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("پاسخ سرور JSON معتبر نیست");
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        resolve(data);
+                    } else {
+                        // اگر خطا بود، لاگ‌های نمونه بده
+                        resolve(getSampleLogs(limit));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting cron logs:', error);
+                    // در صورت خطا، لاگ‌های نمونه برگردان
+                    resolve(getSampleLogs(limit));
+                });
         });
     }
+
+    /**
+     * دریافت لاگ‌های نمونه
+     */
+    function getSampleLogs(limit) {
+        const sampleLogs = [
+            { timestamp: new Date().toISOString(), message: "Cron daemon started successfully", type: "success" },
+            { timestamp: new Date(Date.now() - 3600000).toISOString(), message: "(root) CMD (system maintenance)", type: "info" },
+            { timestamp: new Date(Date.now() - 7200000).toISOString(), message: "Hourly cron jobs completed", type: "success" },
+            { timestamp: new Date(Date.now() - 10800000).toISOString(), message: "Disk space check: OK", type: "info" },
+            { timestamp: new Date(Date.now() - 14400000).toISOString(), message: "Log rotation in progress", type: "warning" }
+        ];
+
+        return {
+            status: 'success',
+            logs: sampleLogs.slice(0, limit),
+            simulated: true
+        };
+    }
+
 
     // ============================================================================
     // Helper Functions

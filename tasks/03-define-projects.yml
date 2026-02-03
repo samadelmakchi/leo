@@ -13,18 +13,10 @@
 
       - name: portal
         folder: portal
-        repo: "git@github.com:nasserman/calibri-portal.git"
+        repo: "git@github.com:nasserman/calibri-portal-frontend.git"
         branch_var: customer_portal_git_branches
         tag_var: customer_portal_git_tags
         update: "{{ customer_portal_update }}"
-        force: yes
-
-      - name: portal-frontend
-        folder: portal-frontend
-        repo: "git@github.com:nasserman/calibri-portal-frontend.git"
-        branch_var: customer_portal_frontend_git_branches
-        tag_var: customer_portal_frontend_git_tags
-        update: "{{ customer_portal_frontend_update }}"
         force: yes
 
       - name: lms

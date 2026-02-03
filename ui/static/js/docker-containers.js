@@ -489,13 +489,50 @@ const DockerContainersModule = (function () {
     function calculateContainerStats(containers = currentContainers) {
         const stats = {
             total: containers.length,
-            running: containers.filter(c => c.status === 'running').length,
-            exited: containers.filter(c => c.status === 'exited').length,
-            stopped: containers.filter(c => c.status === 'stopped').length,
-            paused: containers.filter(c => c.status === 'paused').length,
-            restarting: containers.filter(c => c.status === 'restarting').length,
+            running: 0,
+            exited: 0,
+            stopped: 0,
+            paused: 0,
+            restarting: 0,
             uniqueImages: new Set(containers.map(c => c.image)).size
         };
+
+        // محاسبه دقیق وضعیت‌ها
+        containers.forEach(container => {
+            switch (container.status) {
+                case 'running':
+                    stats.running++;
+                    break;
+                case 'exited':
+                    stats.exited++;
+                    break;
+                case 'stopped':
+                    stats.stopped++;
+                    break;
+                case 'paused':
+                    stats.paused++;
+                    break;
+                case 'restarting':
+                    stats.restarting++;
+                    break;
+                // اگر وضعیت در object اصلی state ذخیره شده باشد
+                case 'created':
+                    // ignore
+                    break;
+                default:
+                    // اگر وضعیت دیگر است، بررسی کن
+                    if (container.state && container.state.includes('running')) {
+                        stats.running++;
+                    } else if (container.state && (container.state.includes('exited') || container.state.includes('stopped'))) {
+                        stats.exited++;
+                    } else if (container.state && container.state.includes('paused')) {
+                        stats.paused++;
+                    } else if (container.state && container.state.includes('restarting')) {
+                        stats.restarting++;
+                    }
+                    break;
+            }
+        });
 
         return stats;
     }

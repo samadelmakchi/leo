@@ -14,9 +14,8 @@
         gateway/admin/captcha_images
         gateway/admin
 
-        # Portal + Portal-Frontend
+        # Portal
         portal
-        portal-frontend
 
         # LMS (Laravel)
         lms/storage/app/public
@@ -32,9 +31,6 @@
 
     - - "{{ info_path }}/databases/{{ inventory_hostname }}.txt"
       - |
-        # Portal (Symfony)
-        mysql,{{ portal_mysql_db_name }},{{ portal_mysql_user }},{{ portal_mysql_password }},{{ customer_containers }}-portal-db
-
         # Gateway (CodeIgniter)
         mysql,{{ gateway_mysql_db_name }},{{ gateway_mysql_user }},{{ gateway_mysql_password }},{{ customer_containers }}-gateway-db
 

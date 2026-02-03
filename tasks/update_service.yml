@@ -48,17 +48,6 @@
   changed_when: git_result.after is defined and git_result.before is defined and git_result.after != git_result.before
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-- name: Show git update summary
-  debug:
-    msg: >-
-      Project {{ project.name }}:
-      {{ git_result.before[:7] if git_result.before is defined and git_result.before else 'none' }}
-      →
-      {{ git_result.after[:7] if git_result.after is defined and git_result.after else 'cloned' }}
-      {% if git_result.after is not defined or not git_result.after %}(New Clone){% endif %}
-  when: git_result is defined
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 - name: Ensure docker directory exists
   ansible.builtin.file:
     path: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker"
@@ -80,12 +69,6 @@
   tags: always
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-- name: Debug host variables
-  debug:
-    var: hostvars[inventory_hostname]
-  tags: debug
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 - name: Get customer_containers from inventory
   set_fact:
     customer_containers: "{{ lookup('vars', 'customer_containers', default=inventory_hostname) }}"
@@ -95,8 +78,8 @@
 - name: Deploy docker-compose.yml
   ansible.builtin.template:
     src: >-
-      {% if project.folder == "portal-frontend" -%}
-      ../template/compose-portal-frontend.yml.j2
+      {% if project.folder == "portal" -%}
+      ../template/compose-portal.yml.j2
       {%- else -%}
       ../template/compose-{{ project.folder }}.yml.j2
       {%- endif %}
@@ -116,7 +99,7 @@
 - name: Deploy docker-compose.yml
   ansible.builtin.template:
     src: >-
-      {% if project.folder == "portal-frontend" %}../template/compose-portal-frontend.yml.j2{% else %}../template/compose-{{ project.folder }}.yml.j2{% endif %}
+      {% if project.folder == "portal" %}../template/compose-portal.yml.j2{% else %}../template/compose-{{ project.folder }}.yml.j2{% endif %}
     dest: "{{ project_path }}/{{ inventory_hostname }}/{{ project.folder }}/docker/docker-compose.yml"
     mode: "0644"
     backup: yes

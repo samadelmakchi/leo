@@ -1,5 +1,5 @@
 ---
-- name: Deploy customer-specific config files (copy module)
+- name: Deploy customer-specific config files (copy module) - Fixed boolean check
   ansible.builtin.copy:
     dest: "{{ item.dest }}"
     content: "{{ item.content }}"
@@ -7,17 +7,12 @@
     force: yes
     backup: yes
   loop:
-    - dest: "{{ project_path }}/{{ inventory_hostname }}/portal-frontend/baseUrl.js"
+    - dest: "{{ project_path }}/{{ inventory_hostname }}/portal/baseUrl.js"
       content: |
-        const baseUrl = 'https://{{ customer_subdomain_backendportal }}.{{ customer_domain }}';
+        const baseUrl = 'https://{{ customer_subdomain_gateway }}.{{ customer_domain }}';
         export default baseUrl;
-      when: customer_portal_frontend_update | default(false)
-
-    - dest: "{{ project_path }}/{{ inventory_hostname }}/portal/.env.local"
-      content: |
-        DATABASE_URL="mysql://{{ portal_mysql_user }}:{{ portal_mysql_password }}@{{ inventory_hostname }}-portal-db:3306/{{ portal_mysql_db_name }}?serverVersion=10.11.2-MariaDB&charset=utf8mb4"
-        BASE_URL="https://{{ customer_subdomain_gateway }}.{{ customer_domain }}"
-      when: customer_portal_update | default(false)
+      # استفاده مستقیم از متغیر بدون تبدیل
+      update_flag: "{{ customer_portal_update }}"
 
     - dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/application/config/my_database.php"
       content: |
@@ -44,13 +39,7 @@
           'failover'  => array(),
           'save_queries' => TRUE
         );
-      when: customer_gateway_update | default(false)
-
-    - dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/application/config/my_config.php"
-      content: |
-        <?php defined('BASEPATH') OR exit('No direct script access allowed');
-        $config['base_url'] = "https://{{ customer_subdomain_gateway }}.{{ customer_domain }}/";
-      when: customer_gateway_update | default(false)
+      update_flag: "{{ customer_gateway_update }}"
 
     - dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/docker/app.conf"
       content: |
@@ -70,20 +59,20 @@
             ProxyPass /socketio-ping http://{{ inventory_hostname }}-socketio-server:{{ customer_websocket_ports }}/
             ProxyPassReverse /socketio-ping http://{{ inventory_hostname }}-socketio-server:{{ customer_websocket_ports }}/
         </VirtualHost>
-      when: customer_gateway_update | default(false)
+      update_flag: "{{ customer_gateway_update }}"
 
     - dest: "{{ project_path }}/{{ inventory_hostname }}/gateway/admin/application/config/my_config.php"
       content: |
         <?php
         defined('BASEPATH') OR exit('No direct script access allowed');
-        $config['base_url'] = "http://localhost:{{ customer_gateway_ports }}";
+        $config['base_url'] = "https://{{ customer_subdomain_gateway }}.{{ customer_domain }}/";
         $config['websocket_container_name'] = '{{ inventory_hostname }}-socketio-server';
         $config['websocket_container_port'] = '{{ customer_websocket_ports }}';
         $config['microservice_registery'] = [
             "lms" => "'{{ inventory_hostname }}-lms",
             "file" => "'{{ inventory_hostname }}-lms",
         ];
-      when: customer_gateway_update | default(false)
+      update_flag: "{{ customer_gateway_update }}"
 
     - dest: "{{ project_path }}/{{ inventory_hostname }}/lms/.env.local"
       content: |
@@ -93,7 +82,7 @@
         DB_DATABASE={{ lms_mysql_db_name }}
         DB_USERNAME={{ lms_mysql_user }}
         DB_PASSWORD={{ lms_mysql_password }}
-      when: customer_lms_update | default(false)
+      update_flag: "{{ customer_lms_update }}"
 
     - dest: "{{ project_path }}/{{ inventory_hostname }}/file/.env.local"
       content: |
@@ -105,10 +94,10 @@
         DB_PASSWORD={{ file_mysql_password }}
         CACHE_DRIVER=file
         FILESYSTEM_DISK=private
-      when: customer_file_update | default(false)
+      update_flag: "{{ customer_file_update }}"
   when:
     - customer_state == "up"
-    - item.when | default(true) | bool
+    - item.update_flag | bool  # استفاده از فیلتر bool به جای string
   loop_control:
     label: "{{ item.dest }}"
 
@@ -120,15 +109,15 @@
     mode: "{{ item.mode | default('0644') }}"
     force: yes
   loop:
-    - src: template/nginx.conf.j2
-      dest: "{{ project_path }}/{{ inventory_hostname }}/portal-frontend/docker/nginx.conf"
+    - src: "{{ playbook_dir }}/template/nginx.conf.j2"
+      dest: "{{ project_path }}/{{ inventory_hostname }}/portal/docker/nginx.conf"
       mode: "0777"
 
-    - src: template/Dockerfile.j2
-      dest: "{{ project_path }}/{{ inventory_hostname }}/portal-frontend/docker/Dockerfile"
+    - src: "{{ playbook_dir }}/template/Dockerfile.j2"
+      dest: "{{ project_path }}/{{ inventory_hostname }}/portal/docker/Dockerfile"
       mode: "0777"
   when:
     - customer_state == "up"
-    - customer_portal_frontend_update | default(false)
+    - customer_portal_update | bool  # استفاده از فیلتر bool
   loop_control:
     label: "{{ item.dest }}"

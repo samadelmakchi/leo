@@ -308,7 +308,7 @@ def get_customer_vars(customer_name):
 def get_available_modules():
     """دریافت لیست ماژول‌های موجود"""
     # این لیست می‌تواند از inventory یا فایل config خوانده شود
-    return ["gateway", "portal", "portal_frontend", "lms", "file"]
+    return ["gateway", "portal", "lms", "file"]
 
 # ============================================================================
 # Routes for Backup Management

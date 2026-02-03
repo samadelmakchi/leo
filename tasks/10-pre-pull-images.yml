@@ -2,7 +2,6 @@
 - name: Pre-pull global images using native docker (ignore errors if tag not exist)
   ansible.builtin.command: docker pull {{ item.image }}
   loop:
-    - { image: mariadb:10.11 }
     - { image: mariadb:10.6.20-focal }
     - { image: nginx:alpine }
     - { image: node:22 }

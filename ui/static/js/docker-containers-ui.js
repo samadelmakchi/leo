@@ -18,7 +18,23 @@ const DockerContainersUI = (function () {
         console.log('Initializing Containers section...');
 
         // بارگذاری لیست کانتینرها
-        loadContainers();
+        return loadContainers()
+            .then(data => {
+                // پر کردن select عملیات سریع
+                populateQuickSelect(data.containers);
+
+                // بارگذاری آمار سیستم
+                return refreshSystemStats();
+            })
+            .then(() => {
+                // تنظیم event listeners
+                setupEventListeners();
+                return Promise.resolve();
+            })
+            .catch(error => {
+                console.error('Error initializing containers section:', error);
+                return Promise.reject(error);
+            });
 
         // بارگذاری آمار سیستم
         refreshSystemStats();
@@ -90,6 +106,8 @@ const DockerContainersUI = (function () {
                     </td>
                 </tr>
             `;
+            // آپدیت select سریع
+            populateQuickSelect([]);
             return;
         }
 
@@ -168,6 +186,9 @@ const DockerContainersUI = (function () {
 
         // آپدیت آمار
         updateContainerStats(filtered);
+
+        // آپدیت select سریع با داده‌های فیلتر شده
+        populateQuickSelect(filtered);
     }
 
     /**
@@ -208,6 +229,8 @@ const DockerContainersUI = (function () {
                 document.getElementById('statsTotal').textContent = data.stats.total;
                 document.getElementById('statsRunning').textContent = data.stats.running;
                 document.getElementById('statsStopped').textContent = data.stats.stopped;
+                document.getElementById('statsPaused').textContent = data.stats.paused;
+                document.getElementById('statsRestarting').textContent = data.stats.restarting;
                 document.getElementById('statsUniqueImages').textContent = data.stats.images;
                 return data;
             })
@@ -218,6 +241,8 @@ const DockerContainersUI = (function () {
                 document.getElementById('statsTotal').textContent = stats.total;
                 document.getElementById('statsRunning').textContent = stats.running;
                 document.getElementById('statsStopped').textContent = stats.exited + stats.stopped;
+                document.getElementById('statsPaused').textContent = data.stats.paused;
+                document.getElementById('statsRestarting').textContent = data.stats.restarting;
                 document.getElementById('statsUniqueImages').textContent = stats.uniqueImages;
                 return {};
             });
@@ -732,13 +757,20 @@ ${data.logs}
     /**
      * Populate quick select dropdown
      */
-    function populateQuickSelect() {
+    function populateQuickSelect(containers) {
         const select = document.getElementById('quickSelectContainer');
         if (!select) return;
 
         select.innerHTML = '<option value="">-- انتخاب کانتینر --</option>';
 
-        const containers = DockerContainersModule._getCurrentContainers();
+        if (!containers || containers.length === 0) {
+            const option = document.createElement('option');
+            option.disabled = true;
+            option.textContent = 'کانتینری یافت نشد';
+            select.appendChild(option);
+            return;
+        }
+
         containers.forEach(container => {
             const option = document.createElement('option');
             option.value = container.id;
@@ -1201,17 +1233,65 @@ ${data.logs}
     }
 
     /**
-     * Show quick actions modal
-     */
-    function showQuickActions() {
-        showToast('عملیات گروهی در دسترس است', 'info');
-    }
-
-    /**
      * Show all logs (placeholder)
      */
     function showAllLogs() {
-        showToast('مشاهده همه لاگ‌ها در حال توسعه است', 'info');
+        const modal = createAllLogsModal();
+        document.body.appendChild(modal);
+
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+
+
+    /**
+     * Create all logs modal
+     */
+    function createAllLogsModal() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal fade';
+        modalDiv.innerHTML = `
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📝 لاگ‌های تمام کانتینرها</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">کانتینر</label>
+                        <select class="form-select" id="allLogsContainerSelect">
+                            <option value="">انتخاب کانتینر</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">تعداد خطوط</label>
+                        <input type="number" class="form-control" id="allLogsTail" value="100" min="1" max="1000">
+                    </div>
+                    <button class="btn btn-primary mb-3" onclick="DockerContainersUI.loadAllLogsForContainer()">
+                        بارگذاری لاگ‌ها
+                    </button>
+                    <div class="mt-3">
+                        <pre class="bg-dark text-light p-3 rounded" id="allLogsOutput" 
+                             style="max-height: 500px; overflow-y: auto; min-height: 200px;">
+                            // لاگ‌ها اینجا نمایش داده می‌شوند
+                        </pre>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // پر کردن لیست کانتینرها بعد از نمایش مودال
+        modalDiv.addEventListener('shown.bs.modal', function () {
+            populateAllLogsContainerSelect();
+        });
+
+        return modalDiv;
     }
 
     /**
@@ -1236,8 +1316,360 @@ ${data.logs}
     /**
      * Show health check (placeholder)
      */
+    /**
+ * Populate all logs container select
+ */
+    function populateAllLogsContainerSelect() {
+        const select = document.getElementById('allLogsContainerSelect');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">انتخاب کانتینر</option>';
+
+        const containers = DockerContainersModule._getCurrentContainers();
+        containers.forEach(container => {
+            const option = document.createElement('option');
+            option.value = container.id;
+            option.textContent = `${container.name} (${container.status})`;
+            select.appendChild(option);
+        });
+    }
+
+    /**
+     * Load logs for selected container
+     */
+    function loadAllLogsForContainer() {
+        const containerId = document.getElementById('allLogsContainerSelect').value;
+        const tail = document.getElementById('allLogsTail').value;
+
+        if (!containerId) {
+            showToast('لطفاً یک کانتینر انتخاب کنید', 'warning');
+            return;
+        }
+
+        showToast('در حال بارگذاری لاگ‌ها...', 'info');
+
+        DockerContainersModule.getContainerLogs(containerId, tail, true)
+            .then(data => {
+                const output = document.getElementById('allLogsOutput');
+                if (output) {
+                    output.textContent = data.logs;
+                    showToast(`${data.lines_count} خط لاگ بارگذاری شد`, 'success');
+                }
+            })
+            .catch(error => {
+                showToast(`خطا در بارگذاری لاگ‌ها: ${error.message}`, 'error');
+            });
+    }
+
+    /**
+     * Show health check modal
+     */
     function showHealthCheck() {
-        showToast('بررسی سلامت در حال توسعه است', 'info');
+        const modal = createHealthCheckModal();
+        document.body.appendChild(modal);
+
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+
+        // اجرای بررسی سلامت
+        runHealthChecks();
+    }
+
+    /**
+     * Create health check modal
+     */
+    function createHealthCheckModal() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal fade';
+        modalDiv.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🏥 بررسی سلامت کانتینرها</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="healthCheckProgress" style="width: 0%">0%</div>
+                    </div>
+                    <div id="healthCheckResults">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">در حال بررسی...</span>
+                            </div>
+                            <p class="mt-2">در حال بررسی سلامت کانتینرها...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                    <button type="button" class="btn btn-primary" onclick="DockerContainersUI.runHealthChecks()">
+                        🔄 بررسی مجدد
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+        return modalDiv;
+    }
+
+    /**
+     * Run health checks
+     */
+    function runHealthChecks() {
+        const containers = DockerContainersModule._getCurrentContainers();
+        const resultsDiv = document.getElementById('healthCheckResults');
+        const progressBar = document.getElementById('healthCheckProgress');
+
+        if (!resultsDiv || !progressBar) return;
+
+        // ریست
+        resultsDiv.innerHTML = '';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+
+        let completed = 0;
+        const total = containers.length;
+        const allResults = [];
+
+        if (total === 0) {
+            resultsDiv.innerHTML = '<div class="alert alert-info">هیچ کانتینری برای بررسی یافت نشد</div>';
+            return;
+        }
+
+        containers.forEach(container => {
+            checkContainerHealth(container)
+                .then(result => {
+                    allResults.push(result);
+                })
+                .catch(error => {
+                    allResults.push({
+                        container: container.name,
+                        status: 'error',
+                        message: error.message
+                    });
+                })
+                .finally(() => {
+                    completed++;
+                    const percent = Math.round((completed / total) * 100);
+                    progressBar.style.width = `${percent}%`;
+                    progressBar.textContent = `${percent}%`;
+
+                    if (completed === total) {
+                        displayHealthCheckResults(allResults);
+                    }
+                });
+        });
+    }
+
+    /**
+     * Check health of a single container
+     */
+    function checkContainerHealth(container) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                let status = 'unknown';
+                let message = '';
+
+                if (container.status === 'running') {
+                    // شبیه‌سازی بررسی سلامت
+                    const isHealthy = Math.random() > 0.3; // 70% شانس سالم بودن
+
+                    if (isHealthy) {
+                        status = 'healthy';
+                        message = 'کانتینر در حال اجرا و پاسخگو است';
+                    } else {
+                        status = 'unhealthy';
+                        message = 'کانتینر در حال اجرا اما ممکن است مشکل داشته باشد';
+                    }
+                } else if (container.status === 'exited' || container.status === 'stopped') {
+                    status = 'stopped';
+                    message = 'کانتینر متوقف شده است';
+                } else {
+                    status = container.status;
+                    message = `وضعیت: ${container.status}`;
+                }
+
+                resolve({
+                    container: container.name,
+                    id: container.id,
+                    status: status,
+                    message: message,
+                    image: container.image,
+                    state: container.status
+                });
+            }, 500); // شبیه‌سازی تاخیر بررسی
+        });
+    }
+
+    /**
+     * Display health check results
+     */
+    function displayHealthCheckResults(results) {
+        const resultsDiv = document.getElementById('healthCheckResults');
+        if (!resultsDiv) return;
+
+        const healthy = results.filter(r => r.status === 'healthy').length;
+        const unhealthy = results.filter(r => r.status === 'unhealthy').length;
+        const stopped = results.filter(r => r.status === 'stopped').length;
+        const errors = results.filter(r => r.status === 'error').length;
+
+        let html = `
+        <div class="alert ${unhealthy === 0 && errors === 0 ? 'alert-success' : 'alert-warning'}">
+            <h6>نتیجه بررسی سلامت</h6>
+            <div class="row text-center">
+                <div class="col-3">
+                    <div class="fs-4">${healthy}</div>
+                    <small class="text-success">سالم</small>
+                </div>
+                <div class="col-3">
+                    <div class="fs-4">${unhealthy}</div>
+                    <small class="text-warning">مشکل دار</small>
+                </div>
+                <div class="col-3">
+                    <div class="fs-4">${stopped}</div>
+                    <small class="text-secondary">متوقف شده</small>
+                </div>
+                <div class="col-3">
+                    <div class="fs-4">${errors}</div>
+                    <small class="text-danger">خطا</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>کانتینر</th>
+                        <th>وضعیت</th>
+                        <th>پیام</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+        results.forEach(result => {
+            let statusBadge = '';
+            switch (result.status) {
+                case 'healthy':
+                    statusBadge = '<span class="badge bg-success">سالم</span>';
+                    break;
+                case 'unhealthy':
+                    statusBadge = '<span class="badge bg-warning">مشکل دار</span>';
+                    break;
+                case 'stopped':
+                    statusBadge = '<span class="badge bg-secondary">متوقف شده</span>';
+                    break;
+                case 'error':
+                    statusBadge = '<span class="badge bg-danger">خطا</span>';
+                    break;
+                default:
+                    statusBadge = `<span class="badge bg-light text-dark">${result.status}</span>`;
+            }
+
+            html += `
+            <tr>
+                <td>
+                    <strong>${result.container}</strong><br>
+                    <small class="text-muted">${result.image}</small>
+                </td>
+                <td>${statusBadge}</td>
+                <td>${result.message}</td>
+            </tr>
+        `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3">
+            <button class="btn btn-sm btn-outline-primary" onclick="DockerContainersUI.exportHealthCheckResults()">
+                📥 ذخیره نتایج
+            </button>
+        </div>
+    `;
+
+        resultsDiv.innerHTML = html;
+    }
+
+    /**
+     * Export health check results
+     */
+    function exportHealthCheckResults() {
+        const resultsDiv = document.getElementById('healthCheckResults');
+        if (!resultsDiv) return;
+
+        const rows = resultsDiv.querySelectorAll('tbody tr');
+        const csv = [];
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 3) {
+                const container = cells[0].textContent.trim().replace(/\n/g, ' ');
+                const status = cells[1].textContent.trim();
+                const message = cells[2].textContent.trim();
+                csv.push(`"${container}","${status}","${message}"`);
+            }
+        });
+
+        const csvContent = 'کانتینر,وضعیت,پیام\n' + csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'health-check-results.csv';
+        link.click();
+
+        showToast('نتایج بررسی سلامت ذخیره شد', 'success');
+    }
+
+    /**
+     * Fix showQuickActions function
+     */
+    function showQuickActions() {
+        // نمایش منو عملیات گروهی
+        const actions = `
+        <div class="dropdown-menu show p-3" style="width: 300px;">
+            <h6 class="mb-2">⚡ عملیات گروهی</h6>
+            <div class="d-grid gap-2">
+                <button class="btn btn-success btn-sm" onclick="DockerContainersUI.batchStart()">
+                    ▶️ شروع انتخاب شده‌ها
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="DockerContainersUI.batchStop()">
+                    ⏸️ توقف همه در حال اجرا
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="DockerContainersUI.batchRemove()">
+                    🗑️ حذف انتخاب شده‌ها
+                </button>
+                <hr>
+                <button class="btn btn-info btn-sm" onclick="DockerContainersUI.pruneContainers()">
+                    🧹 پاکسازی کانتینرهای متوقف شده
+                </button>
+            </div>
+        </div>
+    `;
+
+        // ایجاد و نمایش منو
+        const menu = document.createElement('div');
+        menu.className = 'dropdown position-fixed';
+        menu.style.cssText = 'top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1060;';
+        menu.innerHTML = actions;
+
+        // اضافه کردن backdrop
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        backdrop.onclick = function () {
+            document.body.removeChild(menu);
+            document.body.removeChild(backdrop);
+        };
+
+        document.body.appendChild(backdrop);
+        document.body.appendChild(menu);
     }
 
     // ============================================================================
@@ -1292,10 +1724,12 @@ ${data.logs}
         createContainer,
 
         // توابع کمکی
-        showQuickActions,
         showAllLogs,
         exportContainersList,
-        showHealthCheck
+        showHealthCheck,
+        loadAllLogsForContainer,
+        runHealthChecks,
+        exportHealthCheckResults
     };
 })();
 

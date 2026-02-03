@@ -36,32 +36,22 @@
       ignore_errors: true
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Portal
-    - name: "[Portal] Restore SQL"
+    - name: "[Portal] Copy & Extraction"
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_portal.sql"
-        dest: "{{ project_path }}/{{ inventory_hostname }}/portal/docker/init/install.sql"
-        mode: "4"
+        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}portal.zip"
+        dest: /tmp/{{ inventory_hostname }}portal.zip
         force: yes
-      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_portal.sql') is file
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ 'portal.zip') is file
       ignore_errors: true
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Frontend
-    - name: "[Frontend] Copy & Extraction"
-      ansible.builtin.copy:
-        src: "{{ playbook_dir }}/sql/{{ inventory_hostname }}_frontend.zip"
-        dest: /tmp/{{ inventory_hostname }}_frontend.zip
-        force: yes
-      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_frontend.zip') is file
-      ignore_errors: true
-
-    - name: "[Frontend] Extraction"
+    - name: "[Portal] Extraction"
       ansible.builtin.unarchive:
-        src: /tmp/{{ inventory_hostname }}_frontend.zip
-        dest: "{{ project_path }}/{{ inventory_hostname }}/portal-frontend"
+        src: /tmp/{{ inventory_hostname }}portal.zip
+        dest: "{{ project_path }}/{{ inventory_hostname }}/portal"
         exclude: [node_modules, .git]
         remote_src: yes
         force: yes
-      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ '_frontend.zip') is file
+      when: (playbook_dir ~ '/sql/' ~ inventory_hostname ~ 'portal.zip') is file
       ignore_errors: true
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LMS
